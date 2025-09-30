@@ -292,6 +292,7 @@ def main():
     
     sent_count = 0
     failed_count = 0
+    sent_company_emails = []  # Track which companies to remove
     
     for i, company in enumerate(available_companies[:max_emails], 1):
         print(f"\n[{i}/{min(max_emails, len(available_companies))}] Processing: {company.get('name')}")
@@ -314,6 +315,7 @@ def main():
         if success:
             # Save to sent list
             sender.save_sent_email(company.get("email"), company)
+            sent_company_emails.append(company.get("email"))
             sent_count += 1
         else:
             failed_count += 1
@@ -322,6 +324,14 @@ def main():
         if i < min(max_emails, len(available_companies)):
             print(f"Waiting {delay} seconds before next email...")
             time.sleep(delay)
+    
+    # Remove sent companies from scraped list
+    if sent_company_emails:
+        print(f"\n🗑️  Removing {len(sent_company_emails)} sent companies from scraped list...")
+        companies = [c for c in companies if c.get('email') not in sent_company_emails]
+        with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
+            json.dump(companies, f, indent=2)
+        print(f"✓ Scraped list updated: {len(companies)} companies remaining")
     
     # Print summary
     print("\n" + "="*80)
