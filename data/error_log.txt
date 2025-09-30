@@ -13,3 +13,8 @@ Alternatively, you can pin your installation to the old version, e.g. `pip insta
 
 A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
 
+[2025-09-30 21:01:58] scrape_website_content error for https://www.designrush.com/agency/web-development-companies: 403 -- Forbidden 
+[2025-09-30 21:06:08] scrape_website_content error for https://www.upwork.com/agencies/web-development-agencies/: 403 -- Forbidden 
+[2025-09-30 21:06:33] scrape_website_content error for https://www.hustlermarketing.com/: 422 -- Unprocessable Entity 
+[2025-09-30 21:08:13] scrape_website_content error for https://www.designrush.com/agency/email-marketing/wisconsin/milwaukee: 403 -- Forbidden 
+[2025-09-30 21:08:41] scrape_website_content error for https://coalitiontechnologies.com/email-marketing: 403 -- Forbidden 

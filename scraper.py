@@ -205,11 +205,11 @@ class CompanyScraper:
         
         # Scrape website content
         content_data = self.scrape_website_content(url)
-        time.sleep(2)  # Small delay between requests
+        time.sleep(0.5)  # Reduced delay between requests
         
         # Perform speed test
         speed_data = self.perform_speed_test(url)
-        time.sleep(2)  # Small delay between requests
+        time.sleep(0.5)  # Reduced delay between requests
         
         # Update email if found in content
         if content_data.get("email") and not company.get("email"):
