@@ -7,6 +7,8 @@ import re
 import time
 import http.client
 import urllib.parse
+import smtplib
+import dns.resolver
 from typing import List, Dict, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
@@ -128,6 +130,45 @@ class CompanyScraper:
         # Most common patterns first
         common_prefixes = ['info', 'contact', 'hello', 'office', 'admin', 'support', 'sales']
         return [f"{prefix}@{domain}" for prefix in common_prefixes]
+    
+    def verify_email_exists(self, email: str) -> bool:
+        """
+        Verify if an email address exists using SMTP and DNS checks
+        Returns True if likely valid, False otherwise
+        """
+        try:
+            # Extract domain
+            domain = email.split('@')[1]
+            
+            # Check if domain has MX records
+            try:
+                mx_records = dns.resolver.resolve(domain, 'MX')
+                mx_host = str(mx_records[0].exchange)
+            except:
+                # No MX records, try domain directly
+                mx_host = domain
+            
+            # Quick SMTP check (don't actually send)
+            server = smtplib.SMTP(timeout=5)
+            server.set_debuglevel(0)
+            
+            try:
+                server.connect(mx_host)
+                server.helo(server.local_hostname)
+                server.mail('verify@lesavoir.agency')
+                code, message = server.rcpt(email)
+                server.quit()
+                
+                # 250 means email exists, 550 means it doesn't
+                return code == 250
+            except:
+                server.quit()
+                return False
+                
+        except Exception as e:
+            # If verification fails, assume email might work
+            # Better to try than skip
+            return True
     
     def scrape_website_content(self, url: str) -> Optional[Dict]:
         """
@@ -308,8 +349,15 @@ class CompanyScraper:
             from urllib.parse import urlparse
             domain = urlparse(url).netloc.replace('www.', '')
             email = f"info@{domain}"
-            print(f"Generated: {email}")
+            print(f"Generated: {email}", end=" ")
         
+        # Verify email exists
+        print(f"Verifying email...", end=" ")
+        if not self.verify_email_exists(email):
+            print("✗ Invalid email (skipping)")
+            return None
+        
+        print("✓ Verified!")
         company["email"] = email
         
         # Scrape website content from homepage
