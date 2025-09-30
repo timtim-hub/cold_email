@@ -8,6 +8,7 @@ import time
 import http.client
 import urllib.parse
 from typing import List, Dict, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from scrapfly import ScrapflyClient, ScrapeConfig
 from bs4 import BeautifulSoup
@@ -78,7 +79,53 @@ class CompanyScraper:
         """
         email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
         matches = re.findall(email_pattern, text)
-        return matches[0] if matches else None
+        # Filter out common junk emails
+        if matches:
+            for email in matches:
+                email_lower = email.lower()
+                if not any(skip in email_lower for skip in ['example.com', 'domain.com', 'email.com', 'test.com']):
+                    return email
+        return None
+    
+    def extract_emails_from_html(self, html_content: str, soup: BeautifulSoup) -> List[str]:
+        """
+        Extract all email addresses from HTML including mailto: links
+        """
+        emails = []
+        
+        # 1. Find mailto: links
+        for link in soup.find_all('a', href=True):
+            href = link['href']
+            if href.startswith('mailto:'):
+                email = href.replace('mailto:', '').split('?')[0].strip()
+                if '@' in email:
+                    emails.append(email)
+        
+        # 2. Extract from text content
+        text = soup.get_text()
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        text_emails = re.findall(email_pattern, text)
+        emails.extend(text_emails)
+        
+        # 3. Look in HTML attributes (data-email, etc.)
+        for tag in soup.find_all(attrs={'data-email': True}):
+            emails.append(tag['data-email'])
+        
+        # Filter and return first valid email
+        for email in emails:
+            email_lower = email.lower()
+            if not any(skip in email_lower for skip in ['example.com', 'domain.com', 'email.com', 'test.com', 'sentry.io', 'wixpress.com']):
+                return [email]
+        
+        return []
+    
+    def guess_common_emails(self, domain: str) -> List[str]:
+        """
+        Generate common email patterns for a domain
+        """
+        domain = domain.replace('www.', '')
+        common_prefixes = ['info', 'contact', 'hello', 'support', 'sales', 'admin', 'office']
+        return [f"{prefix}@{domain}" for prefix in common_prefixes]
     
     def scrape_website_content(self, url: str) -> Optional[Dict]:
         """
@@ -102,6 +149,10 @@ class CompanyScraper:
                 # Parse HTML and extract clean text
                 soup = BeautifulSoup(result.content, 'lxml')
                 
+                # Try to extract emails from HTML first (mailto links, etc.)
+                emails = self.extract_emails_from_html(result.content, soup)
+                email = emails[0] if emails else None
+                
                 # Remove script and style elements
                 for script in soup(["script", "style", "meta", "link"]):
                     script.decompose()
@@ -115,8 +166,9 @@ class CompanyScraper:
                 # Limit to first 3000 characters for API efficiency
                 text = text[:3000] if len(text) > 3000 else text
                 
-                # Try to extract email if not found yet
-                email = self.extract_email_from_text(text)
+                # Try text extraction if no email found yet
+                if not email:
+                    email = self.extract_email_from_text(text)
                 
                 # Extract title
                 title = soup.title.string if soup.title else "No title"
@@ -193,7 +245,7 @@ class CompanyScraper:
     
     def find_email_on_pages(self, base_url: str) -> Optional[str]:
         """
-        Try to find email on multiple pages (home, contact, about)
+        Try to find email on multiple pages (home, contact, about) - MULTITHREADED
         """
         from urllib.parse import urljoin, urlparse
         
@@ -205,21 +257,38 @@ class CompanyScraper:
             "/contactus",
             "/about",
             "/about-us",
-            "/aboutus"
+            "/aboutus",
+            "/contact.html",
+            "/about.html"
         ]
         
         domain = urlparse(base_url).netloc
         
-        for path in paths_to_check:
-            try:
+        # Try pages in parallel
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            future_to_path = {}
+            for path in paths_to_check:
                 url = urljoin(base_url, path)
-                content_data = self.scrape_website_content(url)
-                
-                if content_data.get("email"):
-                    print(f"✓ Email found on {path or 'homepage'}")
-                    return content_data["email"]
-            except:
-                continue
+                future = executor.submit(self.scrape_website_content, url)
+                future_to_path[future] = path
+            
+            for future in as_completed(future_to_path):
+                try:
+                    content_data = future.result(timeout=10)
+                    if content_data.get("email"):
+                        path = future_to_path[future]
+                        print(f"✓ Email: {content_data['email']}")
+                        return content_data["email"]
+                except:
+                    continue
+        
+        # If no email found, try common email patterns
+        print(f"Trying common emails...", end=" ")
+        common_emails = self.guess_common_emails(domain)
+        # Just return first common pattern as fallback
+        # We can't verify these work, but they're reasonable guesses
+        # Commented out for now - only return verified emails
+        # return common_emails[0] if common_emails else None
         
         return None
     
@@ -347,22 +416,34 @@ def main():
         
         print(f"\nFound {len(companies)} companies. Starting detailed scraping...")
         
-        # Scrape full data for each company
-        for i, company in enumerate(companies, 1):
-            print(f"[Q{query_num}/{len(search_queries)}][{i}/{len(companies)}]", end=" ")
-            company_data = scraper.scrape_full_company_data(company)
+        # Scrape full data for each company - MULTITHREADED
+        print(f"Scraping {len(companies)} companies in parallel...")
+        
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_company = {
+                executor.submit(scraper.scrape_full_company_data, company): company 
+                for company in companies
+            }
             
-            # Only save if email was found
-            if company_data is not None:
-                company_data['source_query'] = query  # Track which query found this company
-                all_scraped_data.append(company_data)
-                total_new_companies += 1
-                
-                # Save progress every 5 companies with emails
-                if total_new_companies % 5 == 0:
-                    with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
-                        json.dump(all_scraped_data, f, indent=2)
-                    print(f"  💾 Saved {total_new_companies} companies with emails")
+            for i, future in enumerate(as_completed(future_to_company), 1):
+                try:
+                    print(f"[Q{query_num}/{len(search_queries)}][{i}/{len(companies)}]", end=" ")
+                    company_data = future.result(timeout=60)
+                    
+                    # Only save if email was found
+                    if company_data is not None:
+                        company_data['source_query'] = query
+                        all_scraped_data.append(company_data)
+                        total_new_companies += 1
+                        
+                        # Save progress every 5 companies with emails
+                        if total_new_companies % 5 == 0:
+                            with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
+                                json.dump(all_scraped_data, f, indent=2)
+                            print(f"  💾 Saved {total_new_companies} companies")
+                except Exception as e:
+                    print(f"✗ Error: {str(e)[:30]}")
+                    continue
         
         print(f"\n✓ Completed query {query_num}/{len(search_queries)}")
     
