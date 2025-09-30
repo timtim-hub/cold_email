@@ -1,18 +1,3 @@
-# Search queries for company scraping
-# One query per line, comments start with #
-# The scraper will process 50 results per query
-
-# Tech Companies
-web development agencies contact
-digital marketing agencies email
-software development companies contact
-mobile app development companies email
-SEO agencies contact email
-web design companies contact
-ecommerce development agencies email
-IT consulting firms contact
-
-# Local Businesses - Barber Shops
 barber shop contact Salem Oregon
 barber shop email Bend Oregon
 barber shop contact Eugene Oregon
@@ -28,4 +13,3 @@ barber shop email Yakima Washington
 barber shop contact Bellingham Washington
 barber shop email Olympia Washington
 barber shop contact Reno Nevada
-

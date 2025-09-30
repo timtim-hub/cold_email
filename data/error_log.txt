@@ -18,3 +18,10 @@ A detailed migration guide is available here: https://github.com/openai/openai-p
 [2025-09-30 21:06:33] scrape_website_content error for https://www.hustlermarketing.com/: 422 -- Unprocessable Entity 
 [2025-09-30 21:08:13] scrape_website_content error for https://www.designrush.com/agency/email-marketing/wisconsin/milwaukee: 403 -- Forbidden 
 [2025-09-30 21:08:41] scrape_website_content error for https://coalitiontechnologies.com/email-marketing: 403 -- Forbidden 
+[2025-09-30 21:09:44] scrape_website_content error for https://www.reddit.com/r/digital_marketing/comments/1du2d87/who_are_the_top_digital_marketing_companies_what_w/: 403 -- Forbidden 
+[2025-09-30 21:09:54] scrape_website_content error for https://www.sortlist.com/web-development/san-jose-ca-us: 403 -- Forbidden 
+[2025-09-30 21:10:27] scrape_website_content error for https://www.yelp.com/search?find_desc=Web+Development+Companies&find_loc=San+Jose%2C+CA: 403 -- Forbidden 
+[2025-09-30 21:10:30] scrape_website_content error for https://upcity.com/email-marketing/milwaukee: 403 -- Forbidden 
+[2025-09-30 21:11:05] scrape_website_content error for https://clutch.co/agencies/email: 403 -- Forbidden 
+[2025-09-30 21:11:37] scrape_website_content error for https://www.designrush.com/agency/web-development-companies: 403 -- Forbidden 
+[2025-09-30 21:12:11] scrape_website_content error for https://clutch.co/agencies/email: 403 -- Forbidden 

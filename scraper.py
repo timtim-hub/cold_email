@@ -85,15 +85,16 @@ class CompanyScraper:
         Scrape website content using Scrapfly API
         Extract clean text content without scripts
         """
-        print(f"Scraping content from: {url}")
+        print(f"Scraping: {url[:50]}...")
         
         try:
-            # Configure Scrapfly to extract clean content
+            # Configure Scrapfly to extract clean content - fast mode
             config_obj = ScrapeConfig(
                 url=url,
                 render_js=False,  # Faster without JS rendering
                 asp=False,  # Disable ASP to avoid conflicts
-                retry=False  # Disable retry to allow custom timeout
+                retry=False,  # Disable retry for speed
+                timeout=10000  # 10 second timeout
             )
             
             result = self.scrapfly_client.scrape(config_obj)
@@ -128,19 +129,18 @@ class CompanyScraper:
                     "success": True
                 }
             else:
-                print(f"Failed to scrape {url}")
+                print(f"✗ Failed")
                 return {"success": False, "content": "", "title": "", "email": None}
                 
         except Exception as e:
-            print(f"Error scraping {url}: {e}")
-            self.log_error(f"scrape_website_content error for {url}: {e}")
+            print(f"✗ Error (skipping)")
             return {"success": False, "content": "", "title": "", "email": None}
     
     def perform_speed_test(self, url: str) -> Dict:
         """
         Perform website speed test using RapidAPI
         """
-        print(f"Performing speed test for: {url}")
+        print(f"Speed test...", end=" ")
         
         try:
             encoded_url = urllib.parse.quote(url, safe='')
@@ -177,12 +177,12 @@ class CompanyScraper:
                 "raw_data": result
             }
             
-            print(f"Speed test completed: Load time = {speed_data['load_time']}")
+            print(f"✓ {speed_data['load_time']}")
             return speed_data
             
         except Exception as e:
-            print(f"Error performing speed test for {url}: {e}")
-            self.log_error(f"perform_speed_test error for {url}: {e}")
+            print(f"✗ (skipping)")
+            # Skip logging for speed
             return {
                 "success": False,
                 "load_time": "N/A",
@@ -198,18 +198,13 @@ class CompanyScraper:
         """
         url = company.get("url", "")
         
-        print(f"\n{'='*60}")
-        print(f"Processing: {company.get('name', 'Unknown')}")
-        print(f"URL: {url}")
-        print(f"{'='*60}")
+        print(f"\n[{company.get('name', 'Unknown')[:60]}]")
         
         # Scrape website content
         content_data = self.scrape_website_content(url)
-        time.sleep(0.5)  # Reduced delay between requests
         
         # Perform speed test
         speed_data = self.perform_speed_test(url)
-        time.sleep(0.5)  # Reduced delay between requests
         
         # Update email if found in content
         if content_data.get("email") and not company.get("email"):
@@ -314,7 +309,7 @@ def main():
         
         # Scrape full data for each company
         for i, company in enumerate(companies, 1):
-            print(f"\n[Query {query_num}/{len(search_queries)}] [Company {i}/{len(companies)}]")
+            print(f"[Q{query_num}/{len(search_queries)}][{i}/{len(companies)}]", end=" ")
             company_data = scraper.scrape_full_company_data(company)
             company_data['source_query'] = query  # Track which query found this company
             all_scraped_data.append(company_data)
@@ -324,7 +319,7 @@ def main():
             if total_new_companies % 10 == 0:
                 with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
                     json.dump(all_scraped_data, f, indent=2)
-                print(f"\n✓ Progress saved: {total_new_companies} total companies")
+                print(f"  💾 Saved {total_new_companies} companies")
         
         print(f"\n✓ Completed query {query_num}/{len(search_queries)}")
     
