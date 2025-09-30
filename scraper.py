@@ -405,6 +405,38 @@ def load_search_queries(file_path: str = "search_queries.txt") -> List[str]:
         return [config.DEFAULT_SEARCH_QUERY]
 
 
+def get_already_scraped_urls():
+    """
+    Get all URLs we've already scraped to avoid duplicates
+    Checks both current scraped data and sent emails history
+    """
+    scraped_urls = set()
+    
+    # Check current scraped companies
+    if os.path.exists(config.SCRAPED_COMPANIES_FILE):
+        try:
+            with open(config.SCRAPED_COMPANIES_FILE, 'r') as f:
+                companies = json.load(f)
+            for company in companies:
+                if company.get('url'):
+                    scraped_urls.add(company['url'])
+        except:
+            pass
+    
+    # Check sent emails history
+    if os.path.exists(config.SENT_EMAILS_FILE):
+        try:
+            with open(config.SENT_EMAILS_FILE, 'r') as f:
+                sent_data = json.load(f)
+            for entry in sent_data.get('detailed_history', []):
+                if entry.get('url'):
+                    scraped_urls.add(entry['url'])
+        except:
+            pass
+    
+    return scraped_urls
+
+
 def main():
     """
     Main function to run the scraper standalone
@@ -434,13 +466,17 @@ def main():
     # Initialize scraper
     scraper = CompanyScraper()
     
+    # Get already scraped URLs to avoid duplicates
+    already_scraped = get_already_scraped_urls()
+    print(f"Already scraped {len(already_scraped)} unique URLs (will skip)\n")
+    
     # Load existing data if available
     all_scraped_data = []
     if os.path.exists(config.SCRAPED_COMPANIES_FILE):
         try:
             with open(config.SCRAPED_COMPANIES_FILE, 'r') as f:
                 all_scraped_data = json.load(f)
-            print(f"\nLoaded {len(all_scraped_data)} existing companies from previous runs")
+            print(f"Loaded {len(all_scraped_data)} existing companies from previous runs")
         except:
             pass
     
@@ -459,7 +495,18 @@ def main():
             print(f"No companies found for query: {query}")
             continue
         
-        print(f"\nFound {len(companies)} companies. Starting detailed scraping...")
+        # Filter out already scraped URLs
+        new_companies = [c for c in companies if c.get('url') not in already_scraped]
+        skipped = len(companies) - len(new_companies)
+        
+        print(f"\nFound {len(companies)} companies ({skipped} already scraped, {len(new_companies)} new)")
+        
+        if not new_companies:
+            print("All companies already scraped, moving to next query...")
+            continue
+        
+        print(f"Starting detailed scraping of {len(new_companies)} new companies...")
+        companies = new_companies  # Use only new companies
         
         # Scrape full data for each company - REDUCED WORKERS
         print(f"Scraping {len(companies)} companies (rate-limit friendly)...")
