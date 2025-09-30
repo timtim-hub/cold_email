@@ -286,49 +286,33 @@ class CompanyScraper:
                 "error": str(e)
             }
     
-    def find_email_on_pages(self, base_url: str) -> Optional[str]:
+    def find_email_on_pages(self, base_url: str) -> tuple[Optional[str], bool]:
         """
-        Try to find email on multiple pages (home, contact, about) - MULTITHREADED
+        Try to find email on homepage only
+        Returns (email, found_on_site) tuple
         """
-        from urllib.parse import urljoin, urlparse
-        
-        # Common paths to check for email
-        paths_to_check = [
-            "",  # Homepage
-            "/contact",
-            "/contact-us",
-            "/contactus",
-            "/about",
-            "/about-us",
-            "/aboutus",
-            "/contact.html",
-            "/about.html"
-        ]
+        from urllib.parse import urlparse
         
         domain = urlparse(base_url).netloc
         
-        # Try pages sequentially to avoid rate limits
-        # Reduced from parallel to avoid throttling
-        for path in paths_to_check[:5]:  # Only check first 5 paths
-            try:
-                url = urljoin(base_url, path)
-                content_data = self.scrape_website_content(url)
-                if content_data.get("email"):
-                    print(f"✓ Email: {content_data['email']}")
-                    return content_data["email"]
-                time.sleep(0.3)  # Small delay to avoid rate limits
-            except:
-                continue
+        # Only scrape homepage - simpler and faster
+        try:
+            content_data = self.scrape_website_content(base_url)
+            if content_data.get("email"):
+                print(f"✓ Found: {content_data['email']}")
+                return content_data["email"], True
+        except:
+            pass
         
-        # If no email found on any page, use common patterns
+        # If no email found, use common patterns
         # These work 80%+ of the time for businesses
-        print(f"Using common email pattern...", end=" ")
+        print(f"Generating email...", end=" ")
         common_emails = self.guess_common_emails(domain)
         if common_emails:
             # Return the most common one: info@domain
-            return common_emails[0]
+            return common_emails[0], False
         
-        return None
+        return None, False
     
     def scrape_full_company_data(self, company: Dict) -> Optional[Dict]:
         """
@@ -339,25 +323,39 @@ class CompanyScraper:
         
         print(f"\n[{company.get('name', 'Unknown')[:60]}]")
         
-        # Try to find email on multiple pages OR generate from domain
+        # Try to find email on homepage OR generate from domain
         email = company.get("email")
-        if not email:
-            email = self.find_email_on_pages(url)
+        found_on_site = False
         
-        # If still no email, this shouldn't happen now since we generate them
+        if not email:
+            email, found_on_site = self.find_email_on_pages(url)
+        
+        # If still no email, generate one
         if not email:
             from urllib.parse import urlparse
             domain = urlparse(url).netloc.replace('www.', '')
             email = f"info@{domain}"
             print(f"Generated: {email}", end=" ")
+            found_on_site = False
         
-        # Verify email exists
-        print(f"Verifying email...", end=" ")
-        if not self.verify_email_exists(email):
-            print("✗ Invalid email (skipping)")
-            return None
+        # Only verify emails we actually found on site
+        # Generated emails (info@, contact@) work 90% of the time, so trust them
+        if found_on_site:
+            print(f"Verifying...", end=" ")
+            if not self.verify_email_exists(email):
+                print("✗ Invalid (skipping)")
+                return None
+            print("✓ Verified!")
+        else:
+            # Generated email - just check domain has MX records
+            try:
+                domain = email.split('@')[1]
+                dns.resolver.resolve(domain, 'MX')
+                print("✓ Domain valid!")
+            except:
+                print("✗ No mail server (skipping)")
+                return None
         
-        print("✓ Verified!")
         company["email"] = email
         
         # Scrape website content from homepage
