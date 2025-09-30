@@ -98,9 +98,10 @@ Email body:"""
             
             email_body = response.choices[0].message.content.strip()
             
-            # Add signature
-            signature = f"\n\nBest regards,\n\nThe {config.COMPANY_NAME} Team\n{config.CONTACT_EMAIL}"
-            email_body += signature
+            # Don't add extra signature - GPT should sign as Jonas
+            # But ensure contact email is at the end if not present
+            if config.CONTACT_EMAIL not in email_body:
+                email_body += f"\n\n{config.CONTACT_EMAIL}"
             
             # Generate subject line
             subject = config.EMAIL_SUBJECT_TEMPLATE.format(company_name=company_name)
