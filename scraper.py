@@ -238,9 +238,28 @@ class CompanyScraper:
             print(f"Failed to log error: {e}")
 
 
+def load_search_queries(file_path: str = "search_queries.txt") -> List[str]:
+    """
+    Load search queries from file, skipping comments and empty lines
+    """
+    queries = []
+    try:
+        with open(file_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                # Skip comments and empty lines
+                if line and not line.startswith('#'):
+                    queries.append(line)
+        return queries
+    except FileNotFoundError:
+        print(f"Warning: {file_path} not found. Using default query.")
+        return [config.DEFAULT_SEARCH_QUERY]
+
+
 def main():
     """
     Main function to run the scraper standalone
+    Processes multiple search queries with 50 results each
     """
     import os
     
@@ -248,56 +267,84 @@ def main():
     os.makedirs(config.DATA_DIR, exist_ok=True)
     
     print("="*80)
-    print("COLD EMAIL SCRAPER - Standalone Mode")
+    print("COLD EMAIL SCRAPER - Multi-Query Mode")
     print("="*80)
     
-    # Get user input
-    query = input(f"\nEnter search query (default: '{config.DEFAULT_SEARCH_QUERY}'): ").strip()
-    if not query:
-        query = config.DEFAULT_SEARCH_QUERY
+    # Load search queries from file
+    search_queries = load_search_queries("search_queries.txt")
     
-    num_results = input(f"Enter number of results to scrape (default: {config.DEFAULT_NUM_RESULTS}): ").strip()
-    try:
-        num_results = int(num_results) if num_results else config.DEFAULT_NUM_RESULTS
-    except ValueError:
-        num_results = config.DEFAULT_NUM_RESULTS
+    print(f"\nLoaded {len(search_queries)} search queries:")
+    for i, query in enumerate(search_queries, 1):
+        print(f"  {i}. {query}")
+    
+    results_per_query = 50
+    print(f"\nWill scrape {results_per_query} results per query")
+    print(f"Total expected results: ~{len(search_queries) * results_per_query}")
+    
+    confirm = input("\nProceed? (yes/no): ").strip().lower()
+    if confirm != 'yes':
+        print("Cancelled.")
+        return
     
     # Initialize scraper
     scraper = CompanyScraper()
     
-    # Search for companies
-    companies = scraper.search_companies(query, num_results)
+    # Load existing data if available
+    all_scraped_data = []
+    if os.path.exists(config.SCRAPED_COMPANIES_FILE):
+        try:
+            with open(config.SCRAPED_COMPANIES_FILE, 'r') as f:
+                all_scraped_data = json.load(f)
+            print(f"\nLoaded {len(all_scraped_data)} existing companies from previous runs")
+        except:
+            pass
     
-    if not companies:
-        print("\nNo companies found. Exiting.")
-        return
+    # Process each query
+    total_new_companies = 0
     
-    print(f"\nFound {len(companies)} companies. Starting detailed scraping...")
-    
-    # Scrape full data for each company
-    scraped_data = []
-    for i, company in enumerate(companies, 1):
-        print(f"\n[{i}/{len(companies)}] Processing company...")
-        company_data = scraper.scrape_full_company_data(company)
-        scraped_data.append(company_data)
+    for query_num, query in enumerate(search_queries, 1):
+        print("\n" + "="*80)
+        print(f"QUERY {query_num}/{len(search_queries)}: {query}")
+        print("="*80)
         
-        # Save progress periodically
-        if i % 10 == 0:
-            with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
-                json.dump(scraped_data, f, indent=2)
-            print(f"\nProgress saved: {i}/{len(companies)} companies")
+        # Search for companies
+        companies = scraper.search_companies(query, results_per_query)
+        
+        if not companies:
+            print(f"No companies found for query: {query}")
+            continue
+        
+        print(f"\nFound {len(companies)} companies. Starting detailed scraping...")
+        
+        # Scrape full data for each company
+        for i, company in enumerate(companies, 1):
+            print(f"\n[Query {query_num}/{len(search_queries)}] [Company {i}/{len(companies)}]")
+            company_data = scraper.scrape_full_company_data(company)
+            company_data['source_query'] = query  # Track which query found this company
+            all_scraped_data.append(company_data)
+            total_new_companies += 1
+            
+            # Save progress every 10 companies
+            if total_new_companies % 10 == 0:
+                with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
+                    json.dump(all_scraped_data, f, indent=2)
+                print(f"\n✓ Progress saved: {total_new_companies} total companies")
+        
+        print(f"\n✓ Completed query {query_num}/{len(search_queries)}")
     
     # Save final results
     with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
-        json.dump(scraped_data, f, indent=2)
+        json.dump(all_scraped_data, f, indent=2)
     
     # Print summary
     print("\n" + "="*80)
-    print("SCRAPING COMPLETE")
+    print("SCRAPING COMPLETE - ALL QUERIES PROCESSED")
     print("="*80)
-    print(f"Total companies processed: {len(scraped_data)}")
-    print(f"Successfully scraped: {sum(1 for c in scraped_data if c.get('scraped_successfully'))}")
-    print(f"Companies with emails: {sum(1 for c in scraped_data if c.get('email'))}")
+    print(f"Total queries processed: {len(search_queries)}")
+    print(f"Total companies processed: {len(all_scraped_data)}")
+    print(f"New companies added: {total_new_companies}")
+    print(f"Successfully scraped: {sum(1 for c in all_scraped_data if c.get('scraped_successfully'))}")
+    print(f"Companies with emails: {sum(1 for c in all_scraped_data if c.get('email'))}")
     print(f"\nData saved to: {config.SCRAPED_COMPANIES_FILE}")
     print("="*80)
 

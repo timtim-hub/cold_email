@@ -37,8 +37,10 @@ DATA_DIR = "data"
 SCRAPED_COMPANIES_FILE = f"{DATA_DIR}/scraped_companies.json"
 SENT_EMAILS_FILE = f"{DATA_DIR}/sent_emails.json"
 ERROR_LOG_FILE = f"{DATA_DIR}/error_log.txt"
+SEARCH_QUERIES_FILE = "search_queries.txt"
 
 # Scraper Settings
 DEFAULT_SEARCH_QUERY = "web development companies contact"
 DEFAULT_NUM_RESULTS = 100
+RESULTS_PER_QUERY = 50  # Number of results to scrape per query
 
