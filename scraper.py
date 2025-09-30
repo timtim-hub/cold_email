@@ -508,9 +508,38 @@ def main():
         print(f"Starting detailed scraping of {len(new_companies)} new companies...")
         companies = new_companies  # Use only new companies
         
-        # Scrape full data for each company - REDUCED WORKERS
-        print(f"Scraping {len(companies)} companies (rate-limit friendly)...")
+        # Scrape full data for each company - SEQUENTIAL to avoid rate limits
+        print(f"Scraping {len(companies)} companies sequentially (API-friendly)...")
         
+        # Process sequentially instead of parallel to avoid rate limits
+        for i, company in enumerate(companies, 1):
+            print(f"[Q{query_num}/{len(search_queries)}][{i}/{len(companies)}]", end=" ")
+            
+            try:
+                company_data = scraper.scrape_full_company_data(company)
+                
+                # Only save if email was found
+                if company_data is not None:
+                    company_data['source_query'] = query
+                    all_scraped_data.append(company_data)
+                    total_new_companies += 1
+                    
+                    # Save progress every 3 companies with emails
+                    if total_new_companies % 3 == 0:
+                        with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
+                            json.dump(all_scraped_data, f, indent=2)
+                        print(f"  💾 Saved {total_new_companies} companies")
+            except Exception as e:
+                print(f"✗ Error: {str(e)[:30]}")
+            
+            # Rate limit: wait 2 seconds between each company
+            if i < len(companies):
+                time.sleep(2)
+        
+        continue  # Skip the old parallel code
+        
+        # OLD PARALLEL CODE (disabled)
+        """        
         with ThreadPoolExecutor(max_workers=2) as executor:  # Reduced from 5 to 2
             future_to_company = {
                 executor.submit(scraper.scrape_full_company_data, company): company 
@@ -536,8 +565,14 @@ def main():
                 except Exception as e:
                     print(f"✗ Error: {str(e)[:30]}")
                     continue
+        """
         
         print(f"\n✓ Completed query {query_num}/{len(search_queries)}")
+        
+        # Rate limit between queries: wait 5 seconds
+        if query_num < len(search_queries):
+            print("⏳ Waiting 5 seconds before next query...")
+            time.sleep(5)
     
     # Save final results
     with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
