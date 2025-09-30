@@ -93,8 +93,7 @@ class CompanyScraper:
                 url=url,
                 render_js=False,  # Faster without JS rendering
                 asp=False,  # Disable ASP to avoid conflicts
-                retry=False,  # Disable retry for speed
-                timeout=10000  # 10 second timeout
+                retry=False  # Disable retry for speed
             )
             
             result = self.scrapfly_client.scrape(config_obj)
@@ -192,23 +191,64 @@ class CompanyScraper:
                 "error": str(e)
             }
     
-    def scrape_full_company_data(self, company: Dict) -> Dict:
+    def find_email_on_pages(self, base_url: str) -> Optional[str]:
+        """
+        Try to find email on multiple pages (home, contact, about)
+        """
+        from urllib.parse import urljoin, urlparse
+        
+        # Common paths to check for email
+        paths_to_check = [
+            "",  # Homepage
+            "/contact",
+            "/contact-us",
+            "/contactus",
+            "/about",
+            "/about-us",
+            "/aboutus"
+        ]
+        
+        domain = urlparse(base_url).netloc
+        
+        for path in paths_to_check:
+            try:
+                url = urljoin(base_url, path)
+                content_data = self.scrape_website_content(url)
+                
+                if content_data.get("email"):
+                    print(f"✓ Email found on {path or 'homepage'}")
+                    return content_data["email"]
+            except:
+                continue
+        
+        return None
+    
+    def scrape_full_company_data(self, company: Dict) -> Optional[Dict]:
         """
         Scrape complete data for a company including content and speed test
+        Returns None if no email found (to skip saving)
         """
         url = company.get("url", "")
         
         print(f"\n[{company.get('name', 'Unknown')[:60]}]")
         
-        # Scrape website content
+        # Try to find email on multiple pages
+        email = company.get("email")
+        if not email:
+            email = self.find_email_on_pages(url)
+        
+        # Skip if no email found
+        if not email:
+            print("✗ No email found (skipping)")
+            return None
+        
+        company["email"] = email
+        
+        # Scrape website content from homepage
         content_data = self.scrape_website_content(url)
         
         # Perform speed test
         speed_data = self.perform_speed_test(url)
-        
-        # Update email if found in content
-        if content_data.get("email") and not company.get("email"):
-            company["email"] = content_data["email"]
         
         # Compile all data
         company_data = {
@@ -311,15 +351,18 @@ def main():
         for i, company in enumerate(companies, 1):
             print(f"[Q{query_num}/{len(search_queries)}][{i}/{len(companies)}]", end=" ")
             company_data = scraper.scrape_full_company_data(company)
-            company_data['source_query'] = query  # Track which query found this company
-            all_scraped_data.append(company_data)
-            total_new_companies += 1
             
-            # Save progress every 10 companies
-            if total_new_companies % 10 == 0:
-                with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
-                    json.dump(all_scraped_data, f, indent=2)
-                print(f"  💾 Saved {total_new_companies} companies")
+            # Only save if email was found
+            if company_data is not None:
+                company_data['source_query'] = query  # Track which query found this company
+                all_scraped_data.append(company_data)
+                total_new_companies += 1
+                
+                # Save progress every 5 companies with emails
+                if total_new_companies % 5 == 0:
+                    with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
+                        json.dump(all_scraped_data, f, indent=2)
+                    print(f"  💾 Saved {total_new_companies} companies with emails")
         
         print(f"\n✓ Completed query {query_num}/{len(search_queries)}")
     
@@ -332,10 +375,10 @@ def main():
     print("SCRAPING COMPLETE - ALL QUERIES PROCESSED")
     print("="*80)
     print(f"Total queries processed: {len(search_queries)}")
-    print(f"Total companies processed: {len(all_scraped_data)}")
+    print(f"Total companies WITH EMAILS: {len(all_scraped_data)}")
     print(f"New companies added: {total_new_companies}")
     print(f"Successfully scraped: {sum(1 for c in all_scraped_data if c.get('scraped_successfully'))}")
-    print(f"Companies with emails: {sum(1 for c in all_scraped_data if c.get('email'))}")
+    print(f"All have emails: {sum(1 for c in all_scraped_data if c.get('email'))} (100%)")
     print(f"\nData saved to: {config.SCRAPED_COMPANIES_FILE}")
     print("="*80)
 
