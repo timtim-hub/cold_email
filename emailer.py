@@ -8,7 +8,7 @@ import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict, List, Optional
-import openai
+from openai import OpenAI
 import config
 
 
@@ -19,7 +19,7 @@ class EmailSender:
         self.smtp_username = config.SMTP_USERNAME
         self.smtp_password = config.SMTP_PASSWORD
         self.from_email = config.FROM_EMAIL
-        openai.api_key = config.OPENAI_API_KEY
+        self.openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
         
     def generate_personalized_email(self, company_data: Dict) -> Dict:
         """
@@ -71,7 +71,7 @@ Email body:"""
             print(f"Generating personalized email for {company_name}...")
             
             # Use OpenAI Chat Completions API (GPT-4 or latest available)
-            response = openai.ChatCompletion.create(
+            response = self.openai_client.chat.completions.create(
                 model="gpt-4",  # Will use GPT-4 or latest available
                 messages=[
                     {"role": "system", "content": "You are a professional website performance consultant writing personalized outreach emails."},
