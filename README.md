@@ -22,7 +22,13 @@ A comprehensive cold emailing tool that scrapes company information, analyzes we
 pip install -r requirements.txt
 ```
 
-3. **Configuration**:
+3. **Verify setup** (Optional but recommended):
+```bash
+python test_setup.py
+```
+This will verify all packages and API keys are configured correctly.
+
+4. **Configuration**:
 
 Copy the `.env.example` file to `.env` and add your API keys:
 
