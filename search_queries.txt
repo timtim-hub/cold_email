@@ -1,10 +1,16 @@
-restaurant contact Oregon
-dental practice contact Oregon
-medical clinic contact Oregon
-accounting firm contact Oregon
-real estate agency contact Oregon
-insurance agency contact Oregon
-home services contractor Oregon
-fitness gym contact Oregon
-auto repair shop contact Oregon
-veterinary clinic contact Oregon
+# High-converting small business queries - Oregon focus
+plumbing company contact Oregon
+hvac contractor contact Oregon
+roofing company contact Oregon  
+painting contractor contact Oregon
+landscaping service contact Oregon
+auto body shop contact Oregon
+hair salon contact Oregon
+spa wellness center contact Oregon
+pet grooming contact Oregon
+yoga studio contact Oregon
+photography studio contact Oregon
+catering service contact Oregon
+florist shop contact Oregon
+cleaning service contact Oregon
+moving company contact Oregon

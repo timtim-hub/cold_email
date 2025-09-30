@@ -28,3 +28,14 @@ A detailed migration guide is available here: https://github.com/openai/openai-p
 [2025-09-30 21:57:58] save_sent_email error: list indices must be integers or slices, not str
 [2025-09-30 21:58:16] save_sent_email error: list indices must be integers or slices, not str
 [2025-09-30 21:58:24] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 21:58:31] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 21:58:41] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 21:58:51] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 21:59:00] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 21:59:15] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 21:59:57] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 22:00:34] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 22:01:18] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 22:02:02] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 22:02:37] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 22:03:16] save_sent_email error: list indices must be integers or slices, not str

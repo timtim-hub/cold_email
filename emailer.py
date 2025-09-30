@@ -195,7 +195,13 @@ Email body:"""
         try:
             with open(config.SENT_EMAILS_FILE, 'r') as f:
                 sent_data = json.load(f)
-                return set(sent_data.get("sent_emails", []))
+                # Handle both list and dict formats
+                if isinstance(sent_data, dict):
+                    return set(sent_data.get("sent_emails", []))
+                elif isinstance(sent_data, list):
+                    # Old format - convert
+                    return set()
+                return set()
         except FileNotFoundError:
             return set()
         except Exception as e:
@@ -286,10 +292,18 @@ def main():
     sent_emails = sender.load_sent_emails()
     print(f"\nAlready sent to {len(sent_emails)} addresses")
     
-    # Filter companies with emails that haven't been contacted
+    # Filter out law companies and already contacted
+    def is_law_company(company):
+        name = company.get('name', '').lower()
+        content = company.get('website_content', '').lower()[:1000]
+        law_keywords = ['law firm', 'attorney', 'lawyer', 'legal services', 'counsel', 'esquire']
+        return any(kw in name or kw in content for kw in law_keywords)
+    
     available_companies = [
         c for c in companies 
-        if c.get("email") and c.get("email") not in sent_emails
+        if c.get("email") 
+        and c.get("email") not in sent_emails
+        and not is_law_company(c)
     ]
     
     print(f"Available companies to email: {len(available_companies)}")

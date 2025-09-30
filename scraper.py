@@ -406,10 +406,24 @@ def load_search_queries(file_path: str = "search_queries.txt") -> List[str]:
         return [config.DEFAULT_SEARCH_QUERY]
 
 
+def normalize_url(url: str) -> str:
+    """Normalize URL for better comparison (remove www, trailing slash, protocol)"""
+    if not url:
+        return ""
+    
+    from urllib.parse import urlparse
+    parsed = urlparse(url.lower())
+    domain = parsed.netloc or parsed.path
+    domain = domain.replace('www.', '')
+    domain = domain.rstrip('/')
+    return domain
+
+
 def get_already_scraped_urls():
     """
     Get all URLs we've already scraped to avoid duplicates
     Checks both current scraped data and sent emails history
+    Uses normalized URLs for better duplicate detection
     """
     scraped_urls = set()
     
@@ -420,7 +434,7 @@ def get_already_scraped_urls():
                 companies = json.load(f)
             for company in companies:
                 if company.get('url'):
-                    scraped_urls.add(company['url'])
+                    scraped_urls.add(normalize_url(company['url']))
         except:
             pass
     
@@ -429,9 +443,11 @@ def get_already_scraped_urls():
         try:
             with open(config.SENT_EMAILS_FILE, 'r') as f:
                 sent_data = json.load(f)
-            for entry in sent_data.get('detailed_history', []):
-                if entry.get('url'):
-                    scraped_urls.add(entry['url'])
+            # Handle both list and dict formats
+            if isinstance(sent_data, dict):
+                for entry in sent_data.get('detailed_history', []):
+                    if entry.get('url'):
+                        scraped_urls.add(normalize_url(entry['url']))
         except:
             pass
     
@@ -496,8 +512,8 @@ def main():
             print(f"No companies found for query: {query}")
             continue
         
-        # Filter out already scraped URLs
-        new_companies = [c for c in companies if c.get('url') not in already_scraped]
+        # Filter out already scraped URLs (using normalized URLs)
+        new_companies = [c for c in companies if normalize_url(c.get('url', '')) not in already_scraped]
         skipped = len(companies) - len(new_companies)
         
         print(f"\nFound {len(companies)} companies ({skipped} already scraped, {len(new_companies)} new)")
@@ -519,17 +535,29 @@ def main():
             try:
                 company_data = scraper.scrape_full_company_data(company)
                 
-                # Only save if email was found
+                # Only save if email was found AND not a law company
                 if company_data is not None:
-                    company_data['source_query'] = query
-                    all_scraped_data.append(company_data)
-                    total_new_companies += 1
+                    # Double-check not a law company
+                    name_lower = company_data.get('name', '').lower()
+                    content_lower = company_data.get('website_content', '').lower()[:1000]
+                    law_keywords = ['law firm', 'attorney', 'lawyer', 'legal services', 'counsel', 'esquire']
                     
-                    # Save progress every 3 companies with emails
-                    if total_new_companies % 3 == 0:
-                        with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
-                            json.dump(all_scraped_data, f, indent=2)
-                        print(f"  💾 Saved {total_new_companies} companies")
+                    is_law = any(kw in name_lower or kw in content_lower for kw in law_keywords)
+                    
+                    if not is_law:
+                        company_data['source_query'] = query
+                        all_scraped_data.append(company_data)
+                        already_scraped.add(normalize_url(company_data.get('url', '')))  # Add to set
+                        total_new_companies += 1
+                        
+                        # Save progress every 3 companies with emails
+                        if total_new_companies % 3 == 0:
+                            with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
+                                json.dump(all_scraped_data, f, indent=2)
+                            print(f"  💾 Saved {total_new_companies} companies")
+                    else:
+                        print(f"✗ Skipped (law company)")
+                        already_scraped.add(normalize_url(company.get('url', '')))  # Still track to avoid re-scraping
             except Exception as e:
                 print(f"✗ Error: {str(e)[:30]}")
             
