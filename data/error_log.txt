@@ -25,3 +25,6 @@ A detailed migration guide is available here: https://github.com/openai/openai-p
 [2025-09-30 21:11:05] scrape_website_content error for https://clutch.co/agencies/email: 403 -- Forbidden 
 [2025-09-30 21:11:37] scrape_website_content error for https://www.designrush.com/agency/web-development-companies: 403 -- Forbidden 
 [2025-09-30 21:12:11] scrape_website_content error for https://clutch.co/agencies/email: 403 -- Forbidden 
+[2025-09-30 21:57:58] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 21:58:16] save_sent_email error: list indices must be integers or slices, not str
+[2025-09-30 21:58:24] save_sent_email error: list indices must be integers or slices, not str

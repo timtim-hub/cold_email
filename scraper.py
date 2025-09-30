@@ -584,10 +584,9 @@ def main():
     print("SCRAPING COMPLETE - ALL QUERIES PROCESSED")
     print("="*80)
     print(f"Total queries processed: {len(search_queries)}")
-    print(f"Total companies WITH EMAILS: {len(all_scraped_data)}")
-    print(f"New companies added: {total_new_companies}")
-    print(f"Successfully scraped: {sum(1 for c in all_scraped_data if c.get('scraped_successfully'))}")
-    print(f"All have emails: {sum(1 for c in all_scraped_data if c.get('email'))} (100%)")
+    print(f"NEW companies added THIS RUN: {total_new_companies}")
+    print(f"TOTAL companies in database: {len(all_scraped_data)}")
+    print(f"All have verified emails: {sum(1 for c in all_scraped_data if c.get('email'))}")
     print(f"\nData saved to: {config.SCRAPED_COMPANIES_FILE}")
     print("="*80)
 
