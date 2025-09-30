@@ -227,18 +227,13 @@ def main():
     
     print(f"\nLoaded {len(companies)} companies from scraped data")
     
-    # Get user input
-    max_emails = input(f"\nHow many emails to send? (default: {config.MAX_EMAILS_PER_RUN}): ").strip()
-    try:
-        max_emails = int(max_emails) if max_emails else config.MAX_EMAILS_PER_RUN
-    except ValueError:
-        max_emails = config.MAX_EMAILS_PER_RUN
+    # Use defaults (automated execution)
+    max_emails = config.MAX_EMAILS_PER_RUN
+    delay = config.DELAY_BETWEEN_EMAILS
     
-    delay = input(f"Delay between emails in seconds? (default: {config.DELAY_BETWEEN_EMAILS}): ").strip()
-    try:
-        delay = int(delay) if delay else config.DELAY_BETWEEN_EMAILS
-    except ValueError:
-        delay = config.DELAY_BETWEEN_EMAILS
+    print(f"\nConfiguration:")
+    print(f"  - Max emails: {max_emails}")
+    print(f"  - Delay: {delay} seconds")
     
     # Initialize email sender
     sender = EmailSender()
