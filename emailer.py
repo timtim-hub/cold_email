@@ -38,10 +38,18 @@ class EmailSender:
         grade = speed_test.get("grade", "N/A")
         
         # Craft detailed prompt for GPT
-        prompt = f"""You are a website performance consultant from {config.COMPANY_NAME}, {config.COMPANY_DESCRIPTION}.
+        prompt = f"""You are Jonas from {config.COMPANY_NAME}, {config.COMPANY_DESCRIPTION}.
 
 You've analyzed a company's website and found critical performance issues. Write a highly personalized, professional cold email that:
 
+IMPORTANT - NO PLACEHOLDERS:
+- Sign as "Jonas" or "Jonas from LeSavoir.Agency" - NEVER use [Your Name] or placeholders
+- Use the actual company name: {company_name}
+- Use the actual website URL: {website_url}
+- Use real metrics from the speed test
+- Write as if Jonas is personally emailing them
+
+EMAIL REQUIREMENTS:
 1. Immediately grabs attention showing you've analyzed their website
 2. Shows you've done detailed research on their specific website
 3. Presents concrete data from their speed test
@@ -50,9 +58,9 @@ You've analyzed a company's website and found critical performance issues. Write
 6. Emphasizes the urgency and competitive disadvantage they're facing
 7. DO NOT give them tips or tell them HOW to fix it - that's what we do
 8. Offers that {config.COMPANY_NAME} can fix these issues quickly
-9. Provides a simple call-to-action to contact us
+9. Provides a simple call-to-action to contact us at {config.CONTACT_EMAIL}
 10. Keeps a professional, helpful but urgent tone (not salesy or pushy)
-11. NEVER uses placeholders like [Company Name] or [Website URL] - use actual values
+11. Signs off as "Jonas" or "Jonas\nLeSavoir.Agency" - NO PLACEHOLDERS
 12. Is concise but compelling (250-350 words)
 
 Company Details:
