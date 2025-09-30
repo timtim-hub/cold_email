@@ -4,6 +4,8 @@ Email module for crafting and sending personalized cold emails
 
 import json
 import smtplib
+import imaplib
+import email.utils
 import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -113,9 +115,28 @@ Email body:"""
                 "error": str(e)
             }
     
+    def save_to_sent_folder(self, msg: MIMEMultipart):
+        """
+        Save email to Sent folder via IMAP
+        """
+        try:
+            # Connect to IMAP (Namecheap uses same host with imap subdomain)
+            imap_host = self.smtp_host.replace('mail.', 'mail.')  # Keep as is for Namecheap
+            imap = imaplib.IMAP4_SSL(imap_host, 993)
+            imap.login(self.smtp_username, self.smtp_password)
+            
+            # Save to Sent folder
+            imap.append('Sent', '\\Seen', imaplib.Time2Internaldate(time.time()), 
+                       msg.as_bytes())
+            imap.logout()
+            print(f"  ✓ Saved to Sent folder")
+        except Exception as e:
+            # If saving to Sent fails, it's not critical - email was still sent
+            print(f"  ⚠ Could not save to Sent folder (not critical)")
+    
     def send_email(self, to_email: str, subject: str, body: str) -> bool:
         """
-        Send email via SMTP
+        Send email via SMTP and save to Sent folder
         """
         print(f"Sending email to: {to_email}")
         
@@ -125,22 +146,27 @@ Email body:"""
             msg['From'] = self.from_email
             msg['To'] = to_email
             msg['Subject'] = subject
+            msg['Date'] = email.utils.formatdate(localtime=True)
             
             # Attach body
             msg.attach(MIMEText(body, 'plain'))
             
-            # Connect to SMTP server
+            # Connect to SMTP server and send
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.set_debuglevel(0)  # Set to 1 for debugging
                 server.starttls()
                 server.login(self.smtp_username, self.smtp_password)
                 server.send_message(msg)
             
-            print(f"✓ Email sent successfully to {to_email}")
+            print(f"  ✓ Email sent successfully to {to_email}")
+            
+            # Save to Sent folder
+            self.save_to_sent_folder(msg)
+            
             return True
             
         except Exception as e:
-            print(f"✗ Failed to send email to {to_email}: {e}")
+            print(f"  ✗ Failed to send email to {to_email}: {e}")
             self.log_error(f"send_email error to {to_email}: {e}")
             return False
     
