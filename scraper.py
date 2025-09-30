@@ -92,8 +92,7 @@ class CompanyScraper:
             config_obj = ScrapeConfig(
                 url=url,
                 render_js=False,  # Faster without JS rendering
-                asp=True,  # Anti-scraping protection
-                timeout=30000  # 30 seconds timeout
+                asp=True  # Anti-scraping protection
             )
             
             result = self.scrapfly_client.scrape(config_obj)
