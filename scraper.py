@@ -5,6 +5,7 @@ Scraper module for extracting company information, website content, and speed te
 import json
 import re
 import time
+import os
 import http.client
 import urllib.parse
 import smtplib
