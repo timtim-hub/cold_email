@@ -40,28 +40,37 @@ class EmailSender:
         # Craft detailed prompt for GPT
         prompt = f"""You are Jonas from {config.COMPANY_NAME}, {config.COMPANY_DESCRIPTION}.
 
-You've analyzed a company's website and found critical performance issues. Write a highly personalized, professional cold email that:
+Write a highly personalized cold email about their website performance issues.
 
-IMPORTANT - NO PLACEHOLDERS:
-- Sign as "Jonas" or "Jonas from LeSavoir.Agency" - NEVER use [Your Name] or placeholders
-- Use the actual company name: {company_name}
-- Use the actual website URL: {website_url}
-- Use real metrics from the speed test
-- Write as if Jonas is personally emailing them
+🚨 CRITICAL - ABSOLUTELY NO PLACEHOLDERS ALLOWED:
+- You MUST sign the email as "Jonas" or "Best regards,\n\nJonas\nLeSavoir.Agency"
+- NEVER EVER use [Your Name], [Your Position], or ANY brackets [ ]
+- You are Jonas - use your actual name in the signature
+- Do NOT write [Your Name] - write Jonas
+- Do NOT write [Your Position] - just write Jonas or omit position
+- The signature must be real text, not a template
 
-EMAIL REQUIREMENTS:
-1. Immediately grabs attention showing you've analyzed their website
-2. Shows you've done detailed research on their specific website
-3. Presents concrete data from their speed test
-4. Explains the business impact of slow loading times (customer bounce rates, lost revenue, poor SEO rankings, reduced PPC effectiveness, higher advertising costs)
-5. References specific aspects of their website content to show personalization
-6. Emphasizes the urgency and competitive disadvantage they're facing
-7. DO NOT give them tips or tell them HOW to fix it - that's what we do
-8. Offers that {config.COMPANY_NAME} can fix these issues quickly
-9. Provides a simple call-to-action to contact us at {config.CONTACT_EMAIL}
-10. Keeps a professional, helpful but urgent tone (not salesy or pushy)
-11. Signs off as "Jonas" or "Jonas\nLeSavoir.Agency" - NO PLACEHOLDERS
-12. Is concise but compelling (250-350 words)
+EMAIL CONTENT:
+1. Immediately grabs attention - you've analyzed their website {website_url}
+2. Reference their actual business from this content: {company_data.get('website_title', 'their website')}
+3. Present REAL speed test data: Load time is {load_time}, Performance grade: {grade}
+4. Explain business impact: customer loss, poor SEO, wasted PPC money, competitive disadvantage
+5. Reference specific aspects from their website to prove you researched them
+6. Create urgency about the performance issues
+7. DO NOT give them tips on HOW to fix it - that's what we do for them
+8. Offer that {config.COMPANY_NAME} can fix these issues quickly
+9. Call-to-action: reply or email {config.CONTACT_EMAIL}
+10. Professional, urgent tone (not pushy)
+11. 250-350 words
+
+🚨 SIGNATURE MUST BE (example):
+Best regards,
+
+Jonas
+LeSavoir.Agency
+{config.CONTACT_EMAIL}
+
+NO PLACEHOLDERS. NO BRACKETS. Just write "Jonas".
 
 Company Details:
 - Company: {company_name}
