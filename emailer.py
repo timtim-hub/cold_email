@@ -259,13 +259,10 @@ def main():
         print("\nNo new companies to email. All available companies have been contacted.")
         return
     
-    # Confirm before sending
-    print(f"\nReady to send up to {max_emails} emails with {delay}s delay between each.")
-    confirm = input("Continue? (yes/no): ").strip().lower()
-    
-    if confirm != 'yes':
-        print("Cancelled.")
-        return
+    # Auto-start sending
+    print(f"\nSending up to {max_emails} emails with {delay}s delay between each...")
+    print("Starting in 3 seconds...\n")
+    time.sleep(3)
     
     # Send emails
     print("\n" + "="*80)
