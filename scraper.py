@@ -280,11 +280,7 @@ def main():
     results_per_query = 50
     print(f"\nWill scrape {results_per_query} results per query")
     print(f"Total expected results: ~{len(search_queries) * results_per_query}")
-    
-    confirm = input("\nProceed? (yes/no): ").strip().lower()
-    if confirm != 'yes':
-        print("Cancelled.")
-        return
+    print("\nStarting scraper...\n")
     
     # Initialize scraper
     scraper = CompanyScraper()
