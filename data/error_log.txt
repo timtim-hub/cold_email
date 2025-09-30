@@ -1,0 +1,15 @@
+[2025-09-30 20:51:05] scrape_website_content error for https://clickysoft.com/web-development-houston/: 400 -- Bad Request {"api_param":"timeout","code":"ERR::SCRAPE::CONFIG_ERROR","error_id":"e07f4903-3e45-4788-a6ac-1b24438db288","http_code":400,"links":null,"message":"Timeout is not customizable when retry is enabled","reason":"Bad Request"}
+[2025-09-30 20:51:42] scrape_website_content error for https://flywheel.co/services/web-design-and-development: 400 -- Bad Request {"api_param":"timeout","code":"ERR::SCRAPE::CONFIG_ERROR","error_id":"b5c7ff38-1324-4aa8-800c-41b02e3d3200","http_code":400,"links":null,"message":"Timeout is not customizable when retry is enabled","reason":"Bad Request"}
+[2025-09-30 20:52:03] scrape_website_content error for https://devoxsoftware.com/web-development-web-design-in-texas/: 400 -- Bad Request {"api_param":"timeout","code":"ERR::SCRAPE::CONFIG_ERROR","error_id":"a6db86a0-aa1e-4c14-893f-2e9503245bde","http_code":400,"links":null,"message":"Timeout is not customizable when retry is enabled","reason":"Bad Request"}
+[2025-09-30 20:52:39] scrape_website_content error for https://www.designrush.com/agency/web-development-companies: 400 -- Bad Request {"api_param":"timeout","code":"ERR::SCRAPE::CONFIG_ERROR","error_id":"0e3ab346-7adf-4448-b083-0dec579d4c5d","http_code":400,"links":null,"message":"Timeout is not customizable when retry is enabled","reason":"Bad Request"}
+[2025-09-30 20:53:05] scrape_website_content error for https://www.americaneagle.com/: 400 -- Bad Request {"api_param":"timeout","code":"ERR::SCRAPE::CONFIG_ERROR","error_id":"98271448-efd7-406a-aafe-48faa7015065","http_code":400,"links":null,"message":"Timeout is not customizable when retry is enabled","reason":"Bad Request"}
+[2025-09-30 20:55:52] generate_personalized_email error for CONTACT Software: Product Lifecycle Management & IoT: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
