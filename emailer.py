@@ -40,16 +40,18 @@ class EmailSender:
 
 You've analyzed a company's website and found critical performance issues. Write a highly personalized, professional cold email that:
 
-1. Immediately grabs attention with the subject line mentioning a critical error
+1. Immediately grabs attention showing you've analyzed their website
 2. Shows you've done detailed research on their specific website
 3. Presents concrete data from their speed test
-4. Explains the business impact of slow loading times (customer bounce rates, lost revenue, poor SEO rankings, reduced PPC effectiveness)
+4. Explains the business impact of slow loading times (customer bounce rates, lost revenue, poor SEO rankings, reduced PPC effectiveness, higher advertising costs)
 5. References specific aspects of their website content to show personalization
-6. Offers a clear, fast solution from {config.COMPANY_NAME}
-7. Provides a simple call-to-action to contact us
-8. Keeps a professional, helpful tone (not salesy or pushy)
-9. NEVER uses placeholders like [Company Name] or [Website URL] - use actual values
-10. Is concise but compelling (250-350 words)
+6. Emphasizes the urgency and competitive disadvantage they're facing
+7. DO NOT give them tips or tell them HOW to fix it - that's what we do
+8. Offers that {config.COMPANY_NAME} can fix these issues quickly
+9. Provides a simple call-to-action to contact us
+10. Keeps a professional, helpful but urgent tone (not salesy or pushy)
+11. NEVER uses placeholders like [Company Name] or [Website URL] - use actual values
+12. Is concise but compelling (250-350 words)
 
 Company Details:
 - Company: {company_name}

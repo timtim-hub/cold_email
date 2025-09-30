@@ -1,15 +1,8 @@
-barber shop contact Salem Oregon
-barber shop email Bend Oregon
-barber shop contact Eugene Oregon
-barber shop email Albany Oregon
-barber shop contact Medford Oregon
-barber shop email Corvallis Oregon
-barber shop contact Springfield Oregon
-barber shop email Ashland Oregon
-barber shop contact Boise Idaho
-barber shop email Spokane Washington
-barber shop contact Tacoma Washington
-barber shop email Yakima Washington
-barber shop contact Bellingham Washington
-barber shop email Olympia Washington
-barber shop contact Reno Nevada
+restaurant contact email Oregon
+dental office contact email Oregon
+law firm contact email Oregon
+accounting firm contact email Oregon
+real estate agency contact email Oregon
+insurance agency contact email Oregon
+consulting firm contact email Oregon
+marketing agency contact email Oregon

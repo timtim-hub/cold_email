@@ -264,7 +264,23 @@ class CompanyScraper:
         
         domain = urlparse(base_url).netloc
         
-        # Try pages in parallel
+        # Try pages sequentially to avoid rate limits
+        # Reduced from parallel to avoid throttling
+        for path in paths_to_check[:5]:  # Only check first 5 paths
+            try:
+                url = urljoin(base_url, path)
+                content_data = self.scrape_website_content(url)
+                if content_data.get("email"):
+                    print(f"✓ Email: {content_data['email']}")
+                    return content_data["email"]
+                time.sleep(0.3)  # Small delay to avoid rate limits
+            except:
+                continue
+        
+        return None
+        
+        # OLD PARALLEL CODE - commented out to avoid rate limits
+        """
         with ThreadPoolExecutor(max_workers=3) as executor:
             future_to_path = {}
             for path in paths_to_check:
@@ -416,10 +432,10 @@ def main():
         
         print(f"\nFound {len(companies)} companies. Starting detailed scraping...")
         
-        # Scrape full data for each company - MULTITHREADED
-        print(f"Scraping {len(companies)} companies in parallel...")
+        # Scrape full data for each company - REDUCED WORKERS
+        print(f"Scraping {len(companies)} companies (rate-limit friendly)...")
         
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=2) as executor:  # Reduced from 5 to 2
             future_to_company = {
                 executor.submit(scraper.scrape_full_company_data, company): company 
                 for company in companies
