@@ -157,13 +157,23 @@ class CompanyScraper:
             
             result = json.loads(data.decode("utf-8"))
             
-            # Extract key metrics
+            # Extract key metrics from API response
+            client_metrics = result.get("client_metrics", {})
+            server_metrics = result.get("server_metrics", {})
+            
+            # Convert milliseconds to seconds for readability
+            load_time_ms = client_metrics.get("full_load_time_ms", 0)
+            load_time = f"{load_time_ms / 1000:.2f}s" if load_time_ms else "N/A"
+            
             speed_data = {
                 "success": True,
-                "load_time": result.get("load_time", "N/A"),
-                "page_size": result.get("page_size", "N/A"),
-                "requests": result.get("requests", "N/A"),
-                "grade": result.get("grade", "N/A"),
+                "load_time": load_time,
+                "load_time_ms": load_time_ms,
+                "page_size": f"{server_metrics.get('content_size_kb', 0):.2f} KB",
+                "requests": server_metrics.get("request_count", "N/A"),
+                "performance_score": client_metrics.get("performance_score", "N/A"),
+                "lcp_ms": client_metrics.get("lcp_ms", "N/A"),
+                "issues": result.get("issues", []),
                 "raw_data": result
             }
             
