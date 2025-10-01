@@ -171,8 +171,33 @@ class ParallelRunner:
         print("\n✅ All threads finished!")
 
 def main():
-    runner = ParallelRunner()
-    runner.run_parallel()
+    import fcntl
+    
+    # LOCK FILE: Prevent multiple parallel_runner instances
+    lock_file_path = 'data/parallel_runner.lock'
+    os.makedirs('data', exist_ok=True)
+    lock_file = open(lock_file_path, 'w')
+    
+    try:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        print("✓ Acquired parallel_runner lock - no other instances running\n")
+    except IOError:
+        print("⚠️  Another parallel_runner instance is already running. Exiting to prevent conflicts.")
+        print("   To force restart, delete data/parallel_runner.lock and try again.")
+        return
+    
+    try:
+        runner = ParallelRunner()
+        runner.run_parallel()
+    finally:
+        # Release lock
+        try:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            lock_file.close()
+            os.remove(lock_file_path)
+            print("\n✓ Released parallel_runner lock")
+        except:
+            pass
 
 if __name__ == "__main__":
     main()

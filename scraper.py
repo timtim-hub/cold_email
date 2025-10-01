@@ -521,9 +521,20 @@ def main():
     Processes multiple search queries with 50 results each
     """
     import os
+    import fcntl
     
     # Create data directory if it doesn't exist
     os.makedirs(config.DATA_DIR, exist_ok=True)
+    
+    # LOCK FILE: Prevent multiple scraper instances from running simultaneously
+    lock_file_path = os.path.join(config.DATA_DIR, 'scraper.lock')
+    lock_file = open(lock_file_path, 'w')
+    try:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        print("✓ Acquired scraper lock - no other instances running")
+    except IOError:
+        print("⚠️  Another scraper instance is already running. Exiting to prevent conflicts.")
+        return
     
     print("="*80)
     print("COLD EMAIL SCRAPER - Multi-Query Mode")
@@ -685,6 +696,15 @@ def main():
     print(f"All have verified emails: {sum(1 for c in all_scraped_data if c.get('email'))}")
     print(f"\nData saved to: {config.SCRAPED_COMPANIES_FILE}")
     print("="*80)
+    
+    # Release lock
+    try:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        lock_file.close()
+        os.remove(lock_file_path)
+        print("✓ Released scraper lock")
+    except:
+        pass
 
 
 if __name__ == "__main__":

@@ -101,7 +101,7 @@ MISSION: Write a highly personalized, conversion-focused cold email that gets re
 ===== EMAIL STRUCTURE (120-180 words) =====
 
 GREETING (Warm & Professional):
-Hi [First Name if obvious from company name, otherwise use company name],
+Hi {company_name} Team,
 
 OPENING (Pattern Interrupt - NOT the usual "I ran a test"):
 - Start with a compliment about their business (based on website content)
@@ -128,13 +128,14 @@ Senior Performance Consultant
 {config.CONTACT_EMAIL}
 
 ===== CRITICAL RULES =====
+✓ GREETING MUST BE: "Hi {company_name} Team," (CAPITAL T in "Team" - this is mandatory)
+✓ NEVER write "Hi {company_name} team," with lowercase t - that's grammatically incorrect
 ✓ Use their actual company name: {company_name}
 ✓ Reference specific details from their website content
 ✓ Sound like a helpful consultant, NOT a salesperson
 ✓ Create curiosity (don't give away solutions)
 ✓ Be conversational but professional
 ✓ NO placeholders like [Your Name] or [Company]
-✓ Start with "Hi" not "Dear" (more modern/friendly)
 ✓ Keep it tight: 120-180 words MAX
 
 ===== COMPANY INTEL =====
@@ -335,9 +336,20 @@ def main():
     Main function to run the emailer standalone
     """
     import os
+    import fcntl
     
     # Create data directory if it doesn't exist
     os.makedirs(config.DATA_DIR, exist_ok=True)
+    
+    # LOCK FILE: Prevent multiple emailer instances from running simultaneously
+    lock_file_path = os.path.join(config.DATA_DIR, 'emailer.lock')
+    lock_file = open(lock_file_path, 'w')
+    try:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        print("✓ Acquired emailer lock - no other instances running")
+    except IOError:
+        print("⚠️  Another emailer instance is already running. Exiting to prevent duplicate emails.")
+        return
     
     print("="*80)
     print("COLD EMAIL SENDER - Standalone Mode")
@@ -461,6 +473,15 @@ def main():
     print(f"Failed: {failed_count}")
     print(f"Total processed: {sent_count + failed_count}")
     print("="*80)
+    
+    # Release lock
+    try:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        lock_file.close()
+        os.remove(lock_file_path)
+        print("✓ Released emailer lock")
+    except:
+        pass
 
 
 if __name__ == "__main__":
