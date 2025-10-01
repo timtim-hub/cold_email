@@ -56,7 +56,12 @@ Write a SHORT, punchy cold email about their website performance issues.
 
 🚨 NO PLACEHOLDERS - Sign as "Jonas" (not [Your Name])
 
-EMAIL (120-180 words MAX):
+EMAIL STRUCTURE (120-180 words MAX):
+
+GREETING:
+Dear {company_name} Team,
+
+BODY:
 1. Hook: "I ran a speed test on {website_url}"
 2. Their metrics: Load time {load_time}, Grade: {grade}
 3. Impact: Lost customers, poor SEO, wasted ads
@@ -72,7 +77,7 @@ Jonas
 LeSavoir.Agency
 {config.CONTACT_EMAIL}
 
-Write "Jonas" - NOT [Your Name] or placeholders.
+IMPORTANT: Start with "Dear {company_name} Team," and sign as "Jonas" - NOT [Your Name] or placeholders.
 
 Company Details:
 - Company: {company_name}
