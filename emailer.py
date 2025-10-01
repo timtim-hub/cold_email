@@ -93,15 +93,18 @@ Email body:"""
         try:
             print(f"Generating personalized email for {company_name}...")
             
-            # Use OpenAI Chat Completions API with GPT-5 mini for cost efficiency
+            # Use OpenAI Chat Completions API with GPT-5 for high-quality personalization
             response = self.openai_client.chat.completions.create(
-                model="gpt-5-mini",  # Using GPT-5 mini for cost efficiency
+                model="gpt-5",  # Using GPT-5 for premium quality emails
                 messages=[
                     {"role": "system", "content": "You are a professional website performance consultant writing personalized outreach emails."},
                     {"role": "user", "content": prompt}
                 ],
-                max_completion_tokens=800  # GPT-5 mini uses max_completion_tokens instead of max_tokens
-                # Note: GPT-5 mini only supports temperature=1 (default), so we don't set it
+                max_tokens=800,
+                temperature=0.7,
+                top_p=1.0,
+                frequency_penalty=0.3,
+                presence_penalty=0.3
             )
             
             email_body = response.choices[0].message.content.strip()

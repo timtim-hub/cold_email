@@ -27,7 +27,6 @@ driveway sealing contact Oregon
 pool service contact Oregon
 chimney sweep contact Oregon
 appliance repair contact Oregon
-
 # Automotive
 auto repair shop contact Oregon
 auto body shop contact Oregon
@@ -39,7 +38,6 @@ transmission repair contact Oregon
 muffler shop contact Oregon
 brake repair shop contact Oregon
 windshield repair contact Oregon
-
 # Health & Wellness
 dental office contact Oregon
 dentist contact Oregon
@@ -52,7 +50,6 @@ urgent care center contact Oregon
 veterinary clinic contact Oregon
 pet hospital contact Oregon
 optometry office contact Oregon
-
 # Beauty & Personal Care
 hair salon contact Oregon
 beauty salon contact Oregon
@@ -64,7 +61,6 @@ tanning salon contact Oregon
 waxing salon contact Oregon
 tattoo shop contact Oregon
 piercing studio contact Oregon
-
 # Fitness
 gym contact Oregon
 fitness center contact Oregon
@@ -74,7 +70,6 @@ crossfit gym contact Oregon
 martial arts studio contact Oregon
 dance studio contact Oregon
 personal training contact Oregon
-
 # Food & Beverage
 restaurant contact Oregon
 cafe contact Oregon
@@ -96,7 +91,6 @@ bar contact Oregon
 brewery contact Oregon
 winery contact Oregon
 ice cream shop contact Oregon
-
 # Professional Services
 accounting firm contact Oregon
 bookkeeping service contact Oregon
@@ -118,7 +112,6 @@ courier service contact Oregon
 staffing agency contact Oregon
 recruiting firm contact Oregon
 consulting firm contact Oregon
-
 # Retail
 florist contact Oregon
 flower shop contact Oregon
@@ -134,7 +127,6 @@ pet store contact Oregon
 pet grooming contact Oregon
 bike shop contact Oregon
 sporting goods store contact Oregon
-
 # Construction & Trades
 general contractor contact Oregon
 home builder contact Oregon
@@ -154,7 +146,6 @@ cabinet maker contact Oregon
 insulation contractor contact Oregon
 foundation repair contact Oregon
 waterproofing contractor contact Oregon
-
 # Specialty Services
 storage facility contact Oregon
 self storage contact Oregon
@@ -168,12 +159,10 @@ computer repair shop contact Oregon
 phone repair shop contact Oregon
 towing service contact Oregon
 auto glass repair contact Oregon
-
 # Home Improvement Retail
 hardware store contact Oregon
 lumber yard contact Oregon
 home improvement store contact Oregon
-
 # Education & Childcare
 daycare center contact Oregon
 preschool contact Oregon
@@ -181,7 +170,6 @@ tutoring service contact Oregon
 music school contact Oregon
 art school contact Oregon
 driving school contact Oregon
-
 # Entertainment & Recreation
 bowling alley contact Oregon
 movie theater contact Oregon
@@ -189,26 +177,22 @@ arcade contact Oregon
 mini golf contact Oregon
 escape room contact Oregon
 trampoline park contact Oregon
-
 # Pet Services
 dog grooming contact Oregon
 dog training contact Oregon
 pet sitting service contact Oregon
 dog walking service contact Oregon
 pet boarding contact Oregon
-
 # Senior Services
 senior living facility contact Oregon
 assisted living facility contact Oregon
 home care service contact Oregon
-
 # Party & Events
 party rental company contact Oregon
 bounce house rental contact Oregon
 tent rental company contact Oregon
 DJ service contact Oregon
 live band contact Oregon
-
 # Miscellaneous Services
 notary public contact Oregon
 document shredding service contact Oregon
@@ -231,3 +215,8 @@ well drilling contact Oregon
 excavation contractor contact Oregon
 land clearing service contact Oregon
 snow removal service contact Oregon
+plumbing company contact Bend Oregon
+bakery contact Missoula Montana
+auto repair shop contact Bismarck North Dakota
+landscaping contractor contact Burlington Vermont
+roofing contractor contact Roanoke Virginia
