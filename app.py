@@ -430,8 +430,7 @@ Generate ONLY the search queries, one per line, no numbering, no explanations.""
                 {"role": "system", "content": "You are a search query generator for local business outreach. Generate diverse, specific search queries."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=2000,
-            temperature=0.8
+            max_completion_tokens=2000  # GPT-5 only supports default temperature=1
         )
         
         generated_text = response.choices[0].message.content.strip()
