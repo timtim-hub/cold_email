@@ -157,9 +157,9 @@ class CompanyScraper:
             if found_on_site:
                 return True
             
-            # For generated emails, quick SMTP verification with short timeout
+            # For generated emails, STRICT SMTP verification required
             try:
-                server = smtplib.SMTP(timeout=3)  # Reduced from 10s to 3s
+                server = smtplib.SMTP(timeout=5)
                 server.set_debuglevel(0)
                 server.connect(mx_host, 25)
                 server.helo('mail.lesavoir.agency')
@@ -167,18 +167,20 @@ class CompanyScraper:
                 code, message = server.rcpt(email)
                 server.quit()
                 
-                # 250 = accepted, 251 = will forward (both OK)
+                # ONLY accept if explicitly confirmed (250 or 251)
                 if code in [250, 251]:
                     return True
-                elif code >= 500:
-                    return False
                 else:
-                    # Has valid MX, accept it
-                    return True
-            except:
-                # Timeout or error - but has valid MX records, so accept
-                # Common emails like info@/contact@ usually work
-                return True
+                    # Any other code = reject (550, 553, etc. = mailbox doesn't exist)
+                    return False
+            except smtplib.SMTPServerDisconnected:
+                # Server doesn't allow verification - REJECT generated emails
+                return False
+            except smtplib.SMTPConnectError:
+                return False
+            except Exception as e:
+                # Timeout or other error - REJECT (can't verify = don't send)
+                return False
                 
         except Exception as e:
             return False
@@ -360,17 +362,12 @@ class CompanyScraper:
                 return None
             print("✓ Verified!")
         else:
-            # Generated email - quick DNS check only (SMTP check happens in verify_email_exists)
-            try:
-                domain = email.split('@')[1]
-                mx_records = dns.resolver.resolve(domain, 'MX', lifetime=2)  # 2s timeout
-                if mx_records:
-                    print("✓ Domain valid!")
-                else:
-                    print("✗ No MX records")
-                    return None
-            except:
-                print("✗ No mail server (skipping)")
+            # Generated email - MUST verify via SMTP
+            print(f"Verifying generated email...", end=" ")
+            if self.verify_email_exists(email, found_on_site=False):
+                print("✓ SMTP verified!")
+            else:
+                print("✗ SMTP rejected (skipping)")
                 return None
         
         company["email"] = email
