@@ -436,6 +436,15 @@ Generate ONLY the search queries, one per line, no numbering, no explanations.""
         generated_text = response.choices[0].message.content.strip()
         new_queries = [line.strip() for line in generated_text.split('\n') if line.strip() and 'law' not in line.lower() and 'attorney' not in line.lower() and 'legal' not in line.lower()]
         
+        # Load used queries to filter them out
+        used_queries = set()
+        if os.path.exists(config.USED_QUERIES_FILE):
+            with open(config.USED_QUERIES_FILE, 'r') as f:
+                used_queries = {line.strip() for line in f.readlines() if line.strip()}
+        
+        # Filter out already used queries
+        new_queries = [q for q in new_queries if q not in used_queries]
+        
         # Load existing queries if appending
         existing_queries = []
         if append and os.path.exists(config.SEARCH_QUERIES_FILE):
@@ -468,6 +477,65 @@ Generate ONLY the search queries, one per line, no numbering, no explanations.""
             'success': False,
             'message': str(e)
         }), 500
+
+@app.route('/used-queries')
+def used_queries_page():
+    """Render used queries page"""
+    try:
+        return render_template('used_queries.html')
+    except Exception as e:
+        app.logger.error(f"Error rendering used queries page: {e}")
+        return f"Error: {e}", 500
+
+@app.route('/api/used-queries')
+@safe_api_call
+def api_get_used_queries():
+    """Get used search queries"""
+    queries = []
+    try:
+        if os.path.exists(config.USED_QUERIES_FILE):
+            with open(config.USED_QUERIES_FILE, 'r') as f:
+                queries = [line.strip() for line in f.readlines() if line.strip()]
+    except Exception as e:
+        app.logger.error(f"Error loading used queries: {e}")
+    
+    return jsonify({
+        'queries': queries,
+        'count': len(queries)
+    })
+
+@app.route('/api/used-queries/restore', methods=['POST'])
+@safe_api_call
+def api_restore_used_query():
+    """Restore a used query back to active queries"""
+    data = request.json or {}
+    query = data.get('query', '').strip()
+    
+    if not query:
+        return jsonify({'success': False, 'message': 'No query provided'}), 400
+    
+    try:
+        # Remove from used queries
+        used_queries = []
+        if os.path.exists(config.USED_QUERIES_FILE):
+            with open(config.USED_QUERIES_FILE, 'r') as f:
+                used_queries = [line.strip() for line in f.readlines() if line.strip() and line.strip() != query]
+            
+            with open(config.USED_QUERIES_FILE, 'w') as f:
+                for q in used_queries:
+                    f.write(q + '\n')
+        
+        # Add back to active queries
+        with open(config.SEARCH_QUERIES_FILE, 'a') as f:
+            f.write(query + '\n')
+        
+        return jsonify({
+            'success': True,
+            'message': f'Restored query to active list'
+        })
+    except Exception as e:
+        app.logger.error(f"Error restoring query: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/health')
 def api_health():

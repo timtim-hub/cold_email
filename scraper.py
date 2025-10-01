@@ -403,20 +403,68 @@ class CompanyScraper:
 
 def load_search_queries(file_path: str = "search_queries.txt") -> List[str]:
     """
-    Load search queries from file, skipping comments and empty lines
+    Load search queries from file, skipping comments, empty lines, and already used queries
     """
     queries = []
+    used_queries = load_used_queries()
+    
     try:
         with open(file_path, 'r') as f:
             for line in f:
                 line = line.strip()
-                # Skip comments and empty lines
-                if line and not line.startswith('#'):
+                # Skip comments, empty lines, and used queries
+                if line and not line.startswith('#') and line not in used_queries:
                     queries.append(line)
         return queries
     except FileNotFoundError:
         print(f"Warning: {file_path} not found. Using default query.")
         return [config.DEFAULT_SEARCH_QUERY]
+
+
+def load_used_queries() -> set:
+    """
+    Load set of already used queries
+    """
+    used = set()
+    try:
+        if os.path.exists(config.USED_QUERIES_FILE):
+            with open(config.USED_QUERIES_FILE, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        used.add(line)
+    except Exception as e:
+        print(f"Warning: Could not load used queries: {e}")
+    return used
+
+
+def mark_query_as_used(query: str):
+    """
+    Mark a query as used by adding it to used_queries.txt and removing from search_queries.txt
+    """
+    try:
+        # Add to used queries
+        with open(config.USED_QUERIES_FILE, 'a') as f:
+            f.write(query + '\n')
+        
+        # Remove from active queries
+        remaining_queries = []
+        try:
+            with open(config.SEARCH_QUERIES_FILE, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and line != query:
+                        remaining_queries.append(line)
+            
+            with open(config.SEARCH_QUERIES_FILE, 'w') as f:
+                for q in remaining_queries:
+                    f.write(q + '\n')
+        except FileNotFoundError:
+            pass
+        
+        print(f"  📝 Marked query as used: {query}")
+    except Exception as e:
+        print(f"  ⚠ Could not mark query as used: {e}")
 
 
 def normalize_url(url: str) -> str:
@@ -616,6 +664,9 @@ def main():
         """
         
         print(f"\n✓ Completed query {query_num}/{len(search_queries)}")
+        
+        # Mark query as used
+        mark_query_as_used(query)
         
         # No delay between queries
         pass

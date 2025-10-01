@@ -59,6 +59,7 @@ SCRAPED_COMPANIES_FILE = f"{DATA_DIR}/scraped_companies.json"
 SENT_EMAILS_FILE = f"{DATA_DIR}/sent_emails.json"
 ERROR_LOG_FILE = f"{DATA_DIR}/error_log.txt"
 SEARCH_QUERIES_FILE = "search_queries.txt"
+USED_QUERIES_FILE = "used_queries.txt"
 
 # Scraper Settings
 DEFAULT_SEARCH_QUERY = "web development companies contact"
