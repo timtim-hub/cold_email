@@ -347,6 +347,13 @@ def main():
     for i, company in enumerate(available_companies[:max_emails], 1):
         print(f"\n[{i}/{min(max_emails, len(available_companies))}] Processing: {company.get('name')}")
         
+        # CRITICAL: Reload sent emails before each send to prevent duplicates
+        # This prevents race conditions when parallel_runner restarts the emailer
+        current_sent_emails = sender.load_sent_emails()
+        if company.get("email") in current_sent_emails:
+            print(f"⚠️  Already sent to {company.get('email')} - Skipping to prevent duplicate")
+            continue
+        
         # Generate personalized email
         email_data = sender.generate_personalized_email(company)
         
