@@ -22,6 +22,18 @@ class EmailSender:
         self.smtp_password = config.SMTP_PASSWORD
         self.from_email = config.FROM_EMAIL
         self.openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+        self.current_sender_index = 0  # For rotating sender addresses
+        
+    def get_rotating_sender(self) -> str:
+        """
+        Get next rotating sender address from catch-all domain.
+        This bypasses per-address rate limits while all emails go to your inbox.
+        """
+        if config.USE_ROTATING_SENDERS:
+            prefix = config.ROTATING_SENDER_PREFIXES[self.current_sender_index % len(config.ROTATING_SENDER_PREFIXES)]
+            self.current_sender_index += 1
+            return f"{prefix}@{config.CATCH_ALL_DOMAIN}"
+        return self.from_email
         
     def generate_personalized_email(self, company_data: Dict) -> Dict:
         """
@@ -125,50 +137,63 @@ Email body:"""
     
     def save_to_sent_folder(self, msg: MIMEMultipart):
         """
-        Save email to Sent folder via IMAP
+        Save email to Sent folder via IMAP.
+        This works even with rotating sender addresses because we authenticate
+        with the main account and save the complete message.
         """
         try:
-            # Connect to IMAP (Namecheap uses same host with imap subdomain)
+            # Connect to IMAP (Namecheap uses same host)
             imap_host = self.smtp_host.replace('mail.', 'mail.')  # Keep as is for Namecheap
             imap = imaplib.IMAP4_SSL(imap_host, 993)
             imap.login(self.smtp_username, self.smtp_password)
             
-            # Save to Sent folder
+            # Save to Sent folder - the complete message with rotating sender
             imap.append('Sent', '\\Seen', imaplib.Time2Internaldate(time.time()), 
                        msg.as_bytes())
             imap.logout()
             print(f"  ✓ Saved to Sent folder")
         except Exception as e:
             # If saving to Sent fails, it's not critical - email was still sent
-            print(f"  ⚠ Could not save to Sent folder (not critical)")
+            print(f"  ⚠ Could not save to Sent folder: {e}")
     
     def send_email(self, to_email: str, subject: str, body: str) -> bool:
         """
-        Send email via SMTP and save to Sent folder
+        Send email via SMTP with rotating sender addresses and save to Sent folder.
+        
+        How it works:
+        1. Authenticate with main account (contact@lesavoir.agency)
+        2. Send FROM rotating address (jonas@, j.weber@, etc.)
+        3. All replies go to your main inbox (catch-all)
+        4. Save complete message to Sent folder for tracking
         """
         print(f"Sending email to: {to_email}")
         
         try:
+            # Get rotating sender for this email (bypasses rate limits)
+            from_address = self.get_rotating_sender()
+            
             # Create message
             msg = MIMEMultipart()
-            msg['From'] = self.from_email
+            msg['From'] = f"Jonas from LeSavoir.Agency <{from_address}>"
             msg['To'] = to_email
             msg['Subject'] = subject
             msg['Date'] = email.utils.formatdate(localtime=True)
+            msg['Reply-To'] = config.CONTACT_EMAIL  # All replies go to main address
             
             # Attach body
             msg.attach(MIMEText(body, 'plain'))
             
             # Connect to SMTP server and send
+            # Note: We authenticate with main account but send FROM rotating address
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.set_debuglevel(0)  # Set to 1 for debugging
                 server.starttls()
                 server.login(self.smtp_username, self.smtp_password)
                 server.send_message(msg)
             
-            print(f"  ✓ Email sent successfully to {to_email}")
+            print(f"  ✓ Email sent successfully to {to_email} (from: {from_address})")
             
-            # Save to Sent folder
+            # Save to Sent folder (authenticated with main account)
             self.save_to_sent_folder(msg)
             
             return True
@@ -274,6 +299,9 @@ def main():
     print(f"\nConfiguration:")
     print(f"  - Max emails: {max_emails}")
     print(f"  - Delay: {delay} seconds")
+    print(f"  - Rotating senders: {config.USE_ROTATING_SENDERS}")
+    if config.USE_ROTATING_SENDERS:
+        print(f"  - Sender prefixes: {len(config.ROTATING_SENDER_PREFIXES)} addresses")
     
     # Initialize email sender
     sender = EmailSender()

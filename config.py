@@ -18,9 +18,30 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # SMTP Configuration - Load from environment variables
 SMTP_HOST = os.getenv("SMTP_HOST", "mail.privateemail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")  # Main account for authentication
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 FROM_EMAIL = os.getenv("FROM_EMAIL", "")
+
+# Catch-all domain for rotating sender addresses (bypasses per-address rate limits)
+CATCH_ALL_DOMAIN = "lesavoir.agency"  # All emails to *@lesavoir.agency go to your inbox
+USE_ROTATING_SENDERS = True  # Enable rotating sender addresses
+ROTATING_SENDER_PREFIXES = [
+    "jonas",           # Real person name
+    "j.weber",         # First initial + common surname
+    "j.mueller",       # First initial + common surname
+    "j.schmidt",       # First initial + common surname
+    "jonas.m",         # First name + initial
+    "jonas.k",         # First name + initial
+    "jm",              # Initials only
+    "jk",              # Initials only
+    "consulting",      # Department (not obviously sales)
+    "projects",        # Department (not obviously sales)
+    "web",             # Department (technical)
+    "digital",         # Department (technical)
+    "hello",           # Friendly
+    "team",            # Generic but not salesy
+    "info"             # Standard contact
+]
 
 # Company Information
 COMPANY_NAME = "LeSavoir.Agency"
