@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cold Email Dashboard | LeSavoir.Agency</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse-slow {
+            animation: pulse-slow 2s ease-in-out infinite;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .activity-item-new {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-border {
+            border-image: linear-gradient(45deg, #3b82f6, #8b5cf6) 1;
+        }
+    </style>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 min-h-screen text-white">
+    
+    <!-- Header -->
+    <header class="glass border-b border-gray-700">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-envelope-open-text text-3xl text-blue-400"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">Cold Email Dashboard</h1>
+                        <p class="text-sm text-gray-400">LeSavoir.Agency | Real-time Monitoring</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="px-3 py-1 glass rounded-lg text-sm">
+                        <i class="fas fa-clock text-blue-400 mr-2"></i>
+                        <span id="current-time">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-8">
+        
+        <!-- Control Panel -->
+        <div class="glass rounded-2xl p-6 mb-8 border border-blue-500/30">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-sliders-h text-blue-400 mr-3"></i>
+                Control Panel
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Scraper Control -->
+                <div class="bg-gray-800/50 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-spider text-purple-400 text-2xl mr-3"></i>
+                            <div>
+                                <h3 class="font-semibold">Scraper</h3>
+                                <p class="text-xs text-gray-400">Finding leads</p>
+                            </div>
+                        </div>
+                        <div id="scraper-status" class="w-3 h-3 rounded-full bg-gray-600"></div>
+                    </div>
+                    <button onclick="startProcess('scraper')" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded-lg text-sm font-semibold transition mb-2">
+                        <i class="fas fa-play mr-2"></i>Start
+                    </button>
+                    <button onclick="stopProcess('scraper')" class="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg text-sm font-semibold transition">
+                        <i class="fas fa-stop mr-2"></i>Stop
+                    </button>
+                </div>
+
+                <!-- Emailer Control -->
+                <div class="bg-gray-800/50 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-paper-plane text-blue-400 text-2xl mr-3"></i>
+                            <div>
+                                <h3 class="font-semibold">Emailer</h3>
+                                <p class="text-xs text-gray-400">Sending emails</p>
+                            </div>
+                        </div>
+                        <div id="emailer-status" class="w-3 h-3 rounded-full bg-gray-600"></div>
+                    </div>
+                    <button onclick="startProcess('emailer')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg text-sm font-semibold transition mb-2">
+                        <i class="fas fa-play mr-2"></i>Start
+                    </button>
+                    <button onclick="stopProcess('emailer')" class="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg text-sm font-semibold transition">
+                        <i class="fas fa-stop mr-2"></i>Stop
+                    </button>
+                </div>
+
+                <!-- Both Control -->
+                <div class="bg-gray-800/50 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-rocket text-green-400 text-2xl mr-3"></i>
+                            <div>
+                                <h3 class="font-semibold">Parallel Mode</h3>
+                                <p class="text-xs text-gray-400">Both processes</p>
+                            </div>
+                        </div>
+                        <div id="parallel-status" class="w-3 h-3 rounded-full bg-gray-600"></div>
+                    </div>
+                    <button onclick="startProcess('parallel')" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg text-sm font-semibold transition mb-2">
+                        <i class="fas fa-play mr-2"></i>Start Both
+                    </button>
+                    <button onclick="stopProcess('all')" class="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg text-sm font-semibold transition">
+                        <i class="fas fa-stop mr-2"></i>Stop All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Emails Sent -->
+            <div class="glass rounded-2xl p-6 border border-blue-500/20 hover:border-blue-500/50 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Emails Sent Today</p>
+                        <p class="text-4xl font-bold" id="emails-today">0</p>
+                        <p class="text-xs text-gray-500 mt-1">Total: <span id="emails-total">0</span></p>
+                    </div>
+                    <div class="bg-blue-500/20 p-4 rounded-xl">
+                        <i class="fas fa-envelope text-3xl text-blue-400"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-sm">
+                    <i class="fas fa-chart-line text-green-400 mr-2"></i>
+                    <span id="sending-rate" class="text-green-400">0</span>
+                    <span class="text-gray-400 ml-1">emails/min</span>
+                </div>
+            </div>
+
+            <!-- Companies Scraped -->
+            <div class="glass rounded-2xl p-6 border border-purple-500/20 hover:border-purple-500/50 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Companies Queued</p>
+                        <p class="text-4xl font-bold" id="companies-queued">0</p>
+                        <p class="text-xs text-gray-500 mt-1">Scraped: <span id="companies-scraped">0</span></p>
+                    </div>
+                    <div class="bg-purple-500/20 p-4 rounded-xl">
+                        <i class="fas fa-building text-3xl text-purple-400"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-sm">
+                    <i class="fas fa-check-circle text-purple-400 mr-2"></i>
+                    <span class="text-gray-400">Ready to email</span>
+                </div>
+            </div>
+
+            <!-- Success Rate -->
+            <div class="glass rounded-2xl p-6 border border-green-500/20 hover:border-green-500/50 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Success Rate</p>
+                        <p class="text-4xl font-bold" id="success-rate">0%</p>
+                        <p class="text-xs text-gray-500 mt-1">Verified emails</p>
+                    </div>
+                    <div class="bg-green-500/20 p-4 rounded-xl">
+                        <i class="fas fa-check-double text-3xl text-green-400"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-sm">
+                    <i class="fas fa-shield-alt text-green-400 mr-2"></i>
+                    <span class="text-gray-400">SMTP verified</span>
+                </div>
+            </div>
+
+            <!-- Rotating Senders -->
+            <div class="glass rounded-2xl p-6 border border-yellow-500/20 hover:border-yellow-500/50 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Rotating Senders</p>
+                        <p class="text-4xl font-bold" id="sender-count">15</p>
+                        <p class="text-xs text-gray-500 mt-1">Active addresses</p>
+                    </div>
+                    <div class="bg-yellow-500/20 p-4 rounded-xl">
+                        <i class="fas fa-sync-alt text-3xl text-yellow-400"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-sm">
+                    <div id="rotating-status" class="w-2 h-2 rounded-full bg-green-400 mr-2"></div>
+                    <span class="text-gray-400">Enabled</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Email Sending Rate Chart -->
+            <div class="glass rounded-2xl p-6 border border-gray-700">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-chart-line text-blue-400 mr-3"></i>
+                    Sending Rate (Last 24h)
+                </h3>
+                <canvas id="sendingChart"></canvas>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="glass rounded-2xl p-6 border border-gray-700">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-stream text-purple-400 mr-3"></i>
+                    Recent Activity
+                </h3>
+                <div id="activity-feed" class="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+                    <p class="text-gray-500 text-sm">Loading activity...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Emails Table -->
+        <div class="glass rounded-2xl p-6 border border-gray-700">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <i class="fas fa-paper-plane text-blue-400 mr-3"></i>
+                Recent Emails Sent
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b border-gray-700">
+                        <tr class="text-left text-gray-400">
+                            <th class="pb-3">Time</th>
+                            <th class="pb-3">Company</th>
+                            <th class="pb-3">Email</th>
+                            <th class="pb-3">Website</th>
+                        </tr>
+                    </thead>
+                    <tbody id="emails-table" class="divide-y divide-gray-800">
+                        <tr>
+                            <td colspan="4" class="py-4 text-gray-500 text-center">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+
+    <script>
+        // Global state
+        let sendingChart = null;
+        let lastEmailCount = 0;
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `glass px-6 py-4 rounded-lg shadow-lg animate-fade-in-up max-w-sm ${
+                type === 'success' ? 'border-l-4 border-green-500' :
+                type === 'error' ? 'border-l-4 border-red-500' :
+                'border-l-4 border-blue-500'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle text-green-400' : type === 'error' ? 'exclamation-circle text-red-400' : 'info-circle text-blue-400'} mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        // Fetch status and update UI
+        async function updateDashboard() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                // Update process status indicators
+                updateStatusIndicator('scraper-status', data.processes.scraper);
+                updateStatusIndicator('emailer-status', data.processes.emailer);
+                updateStatusIndicator('parallel-status', data.processes.parallel);
+                
+                // Update stats
+                document.getElementById('emails-today').textContent = data.stats.emails_sent_today.toLocaleString();
+                document.getElementById('emails-total').textContent = data.stats.emails_sent_total.toLocaleString();
+                document.getElementById('sending-rate').textContent = data.stats.sending_rate.toFixed(2);
+                document.getElementById('companies-queued').textContent = data.stats.companies_queued.toLocaleString();
+                document.getElementById('companies-scraped').textContent = data.stats.companies_scraped.toLocaleString();
+                document.getElementById('success-rate').textContent = data.stats.success_rate + '%';
+                document.getElementById('sender-count').textContent = data.stats.rotating_sender_count || 1;
+                
+                // Check if new email was sent
+                if (data.stats.emails_sent_total > lastEmailCount) {
+                    lastEmailCount = data.stats.emails_sent_total;
+                    playNotificationSound();
+                }
+                
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+            }
+        }
+
+        // Update status indicator
+        function updateStatusIndicator(elementId, isRunning) {
+            const indicator = document.getElementById(elementId);
+            if (isRunning) {
+                indicator.className = 'w-3 h-3 rounded-full bg-green-500 pulse-slow';
+            } else {
+                indicator.className = 'w-3 h-3 rounded-full bg-gray-600';
+            }
+        }
+
+        // Update activity feed
+        async function updateActivity() {
+            try {
+                const response = await fetch('/api/activity');
+                const data = await response.json();
+                
+                // Update activity feed
+                const feedElement = document.getElementById('activity-feed');
+                if (data.recent_emails.length > 0) {
+                    feedElement.innerHTML = data.recent_emails.slice(0, 10).map(email => `
+                        <div class="flex items-start space-x-3 p-3 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition activity-item-new">
+                            <i class="fas fa-envelope text-blue-400 mt-1"></i>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold truncate">${email.company}</p>
+                                <p class="text-xs text-gray-400 truncate">${email.email}</p>
+                                <p class="text-xs text-gray-500 mt-1">${email.timestamp}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                // Update emails table
+                const tableElement = document.getElementById('emails-table');
+                if (data.recent_emails.length > 0) {
+                    tableElement.innerHTML = data.recent_emails.slice(0, 15).map(email => `
+                        <tr class="hover:bg-gray-800/30 transition">
+                            <td class="py-3 text-gray-400">${email.timestamp.split(' ')[1]}</td>
+                            <td class="py-3">${email.company.substring(0, 40)}${email.company.length > 40 ? '...' : ''}</td>
+                            <td class="py-3 text-blue-400">${email.email}</td>
+                            <td class="py-3"><a href="${email.url}" target="_blank" class="text-purple-400 hover:text-purple-300"><i class="fas fa-external-link-alt"></i></a></td>
+                        </tr>
+                    `).join('');
+                }
+                
+            } catch (error) {
+                console.error('Error updating activity:', error);
+            }
+        }
+
+        // Update charts
+        async function updateCharts() {
+            try {
+                const response = await fetch('/api/charts');
+                const data = await response.json();
+                
+                if (sendingChart) {
+                    sendingChart.data.labels = data.labels;
+                    sendingChart.data.datasets[0].data = data.hourly_sends;
+                    sendingChart.update('none'); // Update without animation for performance
+                } else {
+                    const ctx = document.getElementById('sendingChart').getContext('2d');
+                    sendingChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Emails Sent',
+                                data: data.hourly_sends,
+                                borderColor: 'rgb(59, 130, 246)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: 'rgba(255, 255, 255, 0.5)'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.05)'
+                                    },
+                                    ticks: {
+                                        color: 'rgba(255, 255, 255, 0.5)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating charts:', error);
+            }
+        }
+
+        // Control functions
+        async function startProcess(mode) {
+            try {
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mode})
+                });
+                const data = await response.json();
+                showToast(data.message, data.success ? 'success' : 'error');
+                if (data.success) {
+                    setTimeout(updateDashboard, 2000);
+                }
+            } catch (error) {
+                showToast('Failed to start process', 'error');
+            }
+        }
+
+        async function stopProcess(mode) {
+            try {
+                const response = await fetch('/api/stop', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mode})
+                });
+                const data = await response.json();
+                showToast(data.message, data.success ? 'success' : 'error');
+                if (data.success) {
+                    setTimeout(updateDashboard, 2000);
+                }
+            } catch (error) {
+                showToast('Failed to stop process', 'error');
+            }
+        }
+
+        // Audio notification
+        function playNotificationSound() {
+            // Optional: Play a subtle sound when new email is sent
+            // const audio = new Audio('/static/notification.mp3');
+            // audio.volume = 0.3;
+            // audio.play().catch(() => {});
+        }
+
+        // Initialize and set up intervals
+        function init() {
+            updateDashboard();
+            updateActivity();
+            updateCharts();
+            
+            // Update intervals
+            setInterval(updateDashboard, 3000);  // Every 3 seconds
+            setInterval(updateActivity, 5000);   // Every 5 seconds
+            setInterval(updateCharts, 30000);    // Every 30 seconds
+        }
+
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.5);
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.7);
+        }
+    </style>
+
+</body>
+</html>
+
