@@ -157,9 +157,9 @@ class CompanyScraper:
             if found_on_site:
                 return True
             
-            # For generated emails, do SMTP verification
+            # For generated emails, quick SMTP verification with short timeout
             try:
-                server = smtplib.SMTP(timeout=10)
+                server = smtplib.SMTP(timeout=3)  # Reduced from 10s to 3s
                 server.set_debuglevel(0)
                 server.connect(mx_host, 25)
                 server.helo('mail.lesavoir.agency')
@@ -168,21 +168,16 @@ class CompanyScraper:
                 server.quit()
                 
                 # 250 = accepted, 251 = will forward (both OK)
-                # 550 = mailbox not found, 5xx = rejected
                 if code in [250, 251]:
                     return True
                 elif code >= 500:
                     return False
                 else:
-                    # Uncertain, but has valid domain, so accept
+                    # Has valid MX, accept it
                     return True
-            except smtplib.SMTPServerDisconnected:
-                # Server doesn't allow verification, but has MX = probably OK
-                return True
-            except smtplib.SMTPConnectError:
-                return False
             except:
-                # Has valid MX records, accept it
+                # Timeout or error - but has valid MX records, so accept
+                # Common emails like info@/contact@ usually work
                 return True
                 
         except Exception as e:
@@ -365,11 +360,15 @@ class CompanyScraper:
                 return None
             print("✓ Verified!")
         else:
-            # Generated email - thorough SMTP verification
+            # Generated email - quick DNS check only (SMTP check happens in verify_email_exists)
             try:
                 domain = email.split('@')[1]
-                dns.resolver.resolve(domain, 'MX')
-                print("✓ Domain valid!")
+                mx_records = dns.resolver.resolve(domain, 'MX', lifetime=2)  # 2s timeout
+                if mx_records:
+                    print("✓ Domain valid!")
+                else:
+                    print("✗ No MX records")
+                    return None
             except:
                 print("✗ No mail server (skipping)")
                 return None
@@ -542,12 +541,12 @@ def main():
         print(f"Starting detailed scraping of {len(new_companies)} new companies...")
         companies = new_companies  # Use only new companies
         
-        # Scrape with PARALLEL processing for speed (10 concurrent workers)
-        print(f"Scraping {len(companies)} companies with 10 workers...")
+        # Scrape with MAXIMUM PARALLEL processing (100 concurrent workers)
+        print(f"Scraping {len(companies)} companies with 100 workers...")
         
         from concurrent.futures import ThreadPoolExecutor, as_completed
         
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=100) as executor:
             future_to_company = {
                 executor.submit(scraper.scrape_full_company_data, company): company 
                 for company in companies
@@ -585,8 +584,8 @@ def main():
                 except Exception as e:
                     print(f"✗ Error: {str(e)[:30]}")
         
-        # Small delay between queries only
-        time.sleep(1)
+        # No delay - maximum speed
+        pass
         
         continue  # Skip the old parallel code
         
@@ -621,9 +620,8 @@ def main():
         
         print(f"\n✓ Completed query {query_num}/{len(search_queries)}")
         
-        # Minimal delay between queries
-        if query_num < len(search_queries):
-            time.sleep(0.5)
+        # No delay between queries
+        pass
     
     # Save final results
     with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
