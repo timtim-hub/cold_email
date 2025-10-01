@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Queries | Cold Email Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 min-h-screen text-white">
+    
+    <!-- Header -->
+    <header class="glass border-b border-gray-700">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-gray-400 hover:text-white transition">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </a>
+                    <i class="fas fa-search text-3xl text-purple-400"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">Search Queries</h1>
+                        <p class="text-sm text-gray-400">Manage & Generate with GPT-5</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span id="query-count" class="px-3 py-1 glass rounded-lg text-sm">
+                        <i class="fas fa-list text-purple-400 mr-2"></i>
+                        <span>0 queries</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-8">
+        
+        <!-- Action Panel -->
+        <div class="glass rounded-2xl p-6 mb-8 border border-purple-500/30">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Generate with GPT-5 -->
+                <div class="bg-gray-800/50 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-magic text-purple-400 text-2xl mr-3"></i>
+                        Generate with GPT-5
+                    </h3>
+                    <p class="text-sm text-gray-400 mb-4">Automatically generate diverse search queries for local businesses in small US cities (excludes lawyers).</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm mb-2">Number of queries</label>
+                            <input type="number" id="generate-count" value="50" min="10" max="500" 
+                                   class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2 focus:border-purple-500 focus:outline-none">
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="append-queries" checked class="w-4 h-4 text-purple-600 rounded">
+                            <label for="append-queries" class="text-sm">Append to existing queries (don't replace)</label>
+                        </div>
+                        
+                        <button onclick="generateQueries()" 
+                                class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 py-3 rounded-lg font-semibold transition flex items-center justify-center">
+                            <i class="fas fa-wand-magic-sparkles mr-2"></i>
+                            Generate Queries with GPT-5
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Manual Actions -->
+                <div class="bg-gray-800/50 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-tools text-blue-400 text-2xl mr-3"></i>
+                        Manual Actions
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <button id="edit-btn" onclick="toggleEdit()" 
+                                class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold transition">
+                            <i class="fas fa-edit mr-2"></i>
+                            Enable Editing
+                        </button>
+                        
+                        <button id="save-btn" onclick="saveQueries()" disabled
+                                class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-save mr-2"></i>
+                            Save Changes
+                        </button>
+                        
+                        <button onclick="addQuery()" 
+                                class="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-lg font-semibold transition">
+                            <i class="fas fa-plus mr-2"></i>
+                            Add New Query
+                        </button>
+                        
+                        <button onclick="exportQueries()" 
+                                class="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-lg font-semibold transition">
+                            <i class="fas fa-download mr-2"></i>
+                            Export to File
+                        </button>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Queries List -->
+        <div class="glass rounded-2xl p-6 border border-gray-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="fas fa-list text-purple-400 mr-3"></i>
+                    Current Search Queries
+                </h3>
+                <input type="text" id="search-filter" placeholder="Filter queries..." 
+                       onkeyup="filterQueries()"
+                       class="bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:border-purple-500 focus:outline-none">
+            </div>
+            
+            <div id="queries-container" class="space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar">
+                <p class="text-gray-500 text-center py-8">Loading queries...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="glass rounded-2xl p-8 text-center">
+            <i class="fas fa-spinner fa-spin text-5xl text-purple-400 mb-4"></i>
+            <p class="text-xl font-semibold">Generating with GPT-5...</p>
+            <p class="text-sm text-gray-400 mt-2">This may take 10-30 seconds</p>
+        </div>
+    </div>
+
+    <script>
+        let queries = [];
+        let isEditMode = false;
+
+        // Load queries on page load
+        document.addEventListener('DOMContentLoaded', loadQueries);
+
+        async function loadQueries() {
+            try {
+                const response = await fetch('/api/queries');
+                const data = await response.json();
+                queries = data.queries || [];
+                updateQueryCount();
+                renderQueries();
+            } catch (error) {
+                console.error('Error loading queries:', error);
+                showToast('Failed to load queries', 'error');
+            }
+        }
+
+        function updateQueryCount() {
+            document.getElementById('query-count').innerHTML = `
+                <i class="fas fa-list text-purple-400 mr-2"></i>
+                <span>${queries.length} queries</span>
+            `;
+        }
+
+        function renderQueries() {
+            const container = document.getElementById('queries-container');
+            
+            if (queries.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">No queries yet. Generate some with GPT-5!</p>';
+                return;
+            }
+            
+            container.innerHTML = queries.map((query, index) => `
+                <div class="query-item flex items-center bg-gray-800/30 rounded-lg p-3 hover:bg-gray-800/50 transition" data-query="${query}">
+                    <span class="text-gray-500 text-sm mr-3 w-12">${index + 1}.</span>
+                    ${isEditMode ? 
+                        `<input type="text" value="${query}" 
+                                class="flex-1 bg-gray-900/50 border border-gray-700 rounded px-3 py-2 focus:border-purple-500 focus:outline-none"
+                                onchange="updateQuery(${index}, this.value)">
+                         <button onclick="deleteQuery(${index})" 
+                                 class="ml-3 text-red-400 hover:text-red-300 transition">
+                            <i class="fas fa-trash"></i>
+                         </button>` 
+                        : 
+                        `<span class="flex-1">${query}</span>`
+                    }
+                </div>
+            `).join('');
+        }
+
+        function toggleEdit() {
+            isEditMode = !isEditMode;
+            const editBtn = document.getElementById('edit-btn');
+            const saveBtn = document.getElementById('save-btn');
+            
+            if (isEditMode) {
+                editBtn.innerHTML = '<i class="fas fa-times mr-2"></i>Cancel Editing';
+                editBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                editBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                saveBtn.disabled = false;
+            } else {
+                editBtn.innerHTML = '<i class="fas fa-edit mr-2"></i>Enable Editing';
+                editBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                editBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                saveBtn.disabled = true;
+                loadQueries(); // Reload to discard changes
+            }
+            
+            renderQueries();
+        }
+
+        function updateQuery(index, newValue) {
+            queries[index] = newValue.trim();
+        }
+
+        function deleteQuery(index) {
+            if (confirm('Delete this query?')) {
+                queries.splice(index, 1);
+                updateQueryCount();
+                renderQueries();
+            }
+        }
+
+        function addQuery() {
+            const newQuery = prompt('Enter new search query:');
+            if (newQuery && newQuery.trim()) {
+                queries.push(newQuery.trim());
+                updateQueryCount();
+                renderQueries();
+                showToast('Query added! Remember to save changes.', 'info');
+            }
+        }
+
+        async function saveQueries() {
+            try {
+                const response = await fetch('/api/queries', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({queries})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    toggleEdit(); // Exit edit mode
+                } else {
+                    showToast('Failed to save queries', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving queries:', error);
+                showToast('Failed to save queries', 'error');
+            }
+        }
+
+        async function generateQueries() {
+            const count = parseInt(document.getElementById('generate-count').value);
+            const append = document.getElementById('append-queries').checked;
+            
+            if (count < 10 || count > 500) {
+                showToast('Please enter a number between 10 and 500', 'error');
+                return;
+            }
+            
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/queries/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({count, append})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`Generated ${data.generated} new queries! Total: ${data.total}`, 'success');
+                    await loadQueries(); // Reload to show new queries
+                } else {
+                    showToast('Failed to generate queries: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error generating queries:', error);
+                showToast('Failed to generate queries', 'error');
+            } finally {
+                document.getElementById('loading-overlay').classList.add('hidden');
+            }
+        }
+
+        function filterQueries() {
+            const filter = document.getElementById('search-filter').value.toLowerCase();
+            const items = document.querySelectorAll('.query-item');
+            
+            items.forEach(item => {
+                const query = item.getAttribute('data-query').toLowerCase();
+                if (query.includes(filter)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function exportQueries() {
+            const blob = new Blob([queries.join('\n')], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `search_queries_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Queries exported!', 'success');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `glass px-6 py-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'success' ? 'border-l-4 border-green-500' :
+                type === 'error' ? 'border-l-4 border-red-500' :
+                'border-l-4 border-blue-500'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle text-green-400' : type === 'error' ? 'exclamation-circle text-red-400' : 'info-circle text-blue-400'} mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+    </script>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.7);
+        }
+    </style>
+
+</body>
+</html>
+

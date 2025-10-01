@@ -12,6 +12,7 @@ import time
 import logging
 import traceback
 from datetime import datetime, timedelta
+from openai import OpenAI
 import config
 
 # Configure logging
@@ -337,6 +338,136 @@ def api_logs():
             continue
     
     return jsonify({'logs': logs[-100:]})  # Return last 100 total lines
+
+@app.route('/queries')
+def queries_page():
+    """Render search queries management page"""
+    try:
+        return render_template('queries.html')
+    except Exception as e:
+        app.logger.error(f"Error rendering queries page: {e}")
+        return f"Error: {e}", 500
+
+@app.route('/api/queries')
+@safe_api_call
+def api_get_queries():
+    """Get current search queries"""
+    queries = []
+    try:
+        if os.path.exists(config.SEARCH_QUERIES_FILE):
+            with open(config.SEARCH_QUERIES_FILE, 'r') as f:
+                queries = [line.strip() for line in f.readlines() if line.strip()]
+    except Exception as e:
+        app.logger.error(f"Error loading queries: {e}")
+    
+    return jsonify({
+        'queries': queries,
+        'count': len(queries)
+    })
+
+@app.route('/api/queries', methods=['POST'])
+@safe_api_call
+def api_save_queries():
+    """Save search queries"""
+    data = request.json or {}
+    queries = data.get('queries', [])
+    
+    try:
+        with open(config.SEARCH_QUERIES_FILE, 'w') as f:
+            for query in queries:
+                if query.strip():
+                    f.write(query.strip() + '\n')
+        
+        return jsonify({
+            'success': True,
+            'message': f'Saved {len(queries)} queries',
+            'count': len(queries)
+        })
+    except Exception as e:
+        app.logger.error(f"Error saving queries: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/queries/generate', methods=['POST'])
+@safe_api_call
+def api_generate_queries():
+    """Generate new search queries using GPT-4"""
+    data = request.json or {}
+    num_queries = data.get('count', 50)
+    append = data.get('append', True)  # Append to existing or replace
+    
+    try:
+        # Initialize OpenAI client
+        client = OpenAI(api_key=config.OPENAI_API_KEY)
+        
+        # Generate queries using GPT-4
+        prompt = f"""Generate {num_queries} diverse search queries for finding local businesses in small US cities.
+
+Requirements:
+- Focus on LOCAL BUSINESSES and SERVICE PROVIDERS
+- Include SMALL to MEDIUM US cities (not major metros like NYC, LA)
+- Mix of business types: home services, retail, professional services, food/beverage, etc.
+- NO LAW FIRMS, NO ATTORNEYS, NO LAWYERS, NO LEGAL SERVICES
+- Format: "[business type] contact [city/state]" or "[business type] contact [state]"
+- Use varied US states and cities
+- Include practical, hands-on businesses that need websites
+
+Examples:
+- plumbing company contact Salem Oregon
+- restaurant contact Iowa
+- auto repair shop contact Boise Idaho
+- dental office contact Vermont
+- hvac contractor contact Eugene Oregon
+
+Generate ONLY the search queries, one per line, no numbering, no explanations."""
+
+        response = client.chat.completions.create(
+            model="gpt-5",  # Using latest GPT-5
+            messages=[
+                {"role": "system", "content": "You are a search query generator for local business outreach. Generate diverse, specific search queries."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=2000,
+            temperature=0.8
+        )
+        
+        generated_text = response.choices[0].message.content.strip()
+        new_queries = [line.strip() for line in generated_text.split('\n') if line.strip() and 'law' not in line.lower() and 'attorney' not in line.lower() and 'legal' not in line.lower()]
+        
+        # Load existing queries if appending
+        existing_queries = []
+        if append and os.path.exists(config.SEARCH_QUERIES_FILE):
+            with open(config.SEARCH_QUERIES_FILE, 'r') as f:
+                existing_queries = [line.strip() for line in f.readlines() if line.strip()]
+        
+        # Combine and deduplicate
+        if append:
+            all_queries = existing_queries + new_queries
+            all_queries = list(dict.fromkeys(all_queries))  # Remove duplicates while preserving order
+        else:
+            all_queries = new_queries
+        
+        # Save to file
+        with open(config.SEARCH_QUERIES_FILE, 'w') as f:
+            for query in all_queries:
+                f.write(query + '\n')
+        
+        return jsonify({
+            'success': True,
+            'message': f'Generated {len(new_queries)} new queries',
+            'generated': len(new_queries),
+            'total': len(all_queries),
+            'queries': new_queries[:10]  # Show first 10 as preview
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Error generating queries: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
 
 @app.route('/api/health')
 def api_health():
