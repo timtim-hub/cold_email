@@ -100,11 +100,8 @@ Email body:"""
                     {"role": "system", "content": "You are a professional website performance consultant writing personalized outreach emails."},
                     {"role": "user", "content": prompt}
                 ],
-                max_completion_tokens=800,  # GPT-5 mini uses max_completion_tokens instead of max_tokens
-                temperature=0.7,
-                top_p=1.0,
-                frequency_penalty=0.3,
-                presence_penalty=0.3
+                max_completion_tokens=800  # GPT-5 mini uses max_completion_tokens instead of max_tokens
+                # Note: GPT-5 mini only supports temperature=1 (default), so we don't set it
             )
             
             email_body = response.choices[0].message.content.strip()

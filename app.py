@@ -430,8 +430,8 @@ Generate ONLY the search queries, one per line, no numbering, no explanations.""
                 {"role": "system", "content": "You are a search query generator for local business outreach. Generate diverse, specific search queries."},
                 {"role": "user", "content": prompt}
             ],
-            max_completion_tokens=2000,  # GPT-5 mini uses max_completion_tokens instead of max_tokens
-            temperature=0.8
+            max_completion_tokens=2000  # GPT-5 mini uses max_completion_tokens instead of max_tokens
+            # Note: GPT-5 mini only supports temperature=1 (default), so we don't set it
         )
         
         generated_text = response.choices[0].message.content.strip()
