@@ -132,44 +132,61 @@ class CompanyScraper:
         common_prefixes = ['info', 'contact', 'hello', 'office', 'admin', 'support', 'sales']
         return [f"{prefix}@{domain}" for prefix in common_prefixes]
     
-    def verify_email_exists(self, email: str) -> bool:
+    def verify_email_exists(self, email: str, found_on_site: bool = False) -> bool:
         """
-        Verify if an email address exists using SMTP and DNS checks
-        Returns True if likely valid, False otherwise
+        Improved email verification using DNS MX records and SMTP
+        More thorough verification for generated emails, lenient for found emails
         """
+        if not email or '@' not in email:
+            return False
+        
         try:
-            # Extract domain
-            domain = email.split('@')[1]
+            domain = email.split('@')[1].lower()
             
-            # Check if domain has MX records
+            # Check DNS MX records (required)
             try:
                 mx_records = dns.resolver.resolve(domain, 'MX')
-                mx_host = str(mx_records[0].exchange)
+                if not mx_records:
+                    return False
+                mx_host = str(mx_records[0].exchange).rstrip('.')
             except:
-                # No MX records, try domain directly
-                mx_host = domain
+                # No MX records = no email server
+                return False
             
-            # Quick SMTP check (don't actually send)
-            server = smtplib.SMTP(timeout=5)
-            server.set_debuglevel(0)
+            # If email was found on site, DNS check is enough
+            if found_on_site:
+                return True
             
+            # For generated emails, do SMTP verification
             try:
-                server.connect(mx_host)
-                server.helo(server.local_hostname)
+                server = smtplib.SMTP(timeout=10)
+                server.set_debuglevel(0)
+                server.connect(mx_host, 25)
+                server.helo('mail.lesavoir.agency')
                 server.mail('verify@lesavoir.agency')
                 code, message = server.rcpt(email)
                 server.quit()
                 
-                # 250 means email exists, 550 means it doesn't
-                return code == 250
-            except:
-                server.quit()
+                # 250 = accepted, 251 = will forward (both OK)
+                # 550 = mailbox not found, 5xx = rejected
+                if code in [250, 251]:
+                    return True
+                elif code >= 500:
+                    return False
+                else:
+                    # Uncertain, but has valid domain, so accept
+                    return True
+            except smtplib.SMTPServerDisconnected:
+                # Server doesn't allow verification, but has MX = probably OK
+                return True
+            except smtplib.SMTPConnectError:
                 return False
+            except:
+                # Has valid MX records, accept it
+                return True
                 
         except Exception as e:
-            # If verification fails, assume email might work
-            # Better to try than skip
-            return True
+            return False
     
     def scrape_website_content(self, url: str) -> Optional[Dict]:
         """
@@ -525,45 +542,51 @@ def main():
         print(f"Starting detailed scraping of {len(new_companies)} new companies...")
         companies = new_companies  # Use only new companies
         
-        # Scrape full data for each company - SEQUENTIAL to avoid rate limits
-        print(f"Scraping {len(companies)} companies sequentially (API-friendly)...")
+        # Scrape with PARALLEL processing for speed (10 concurrent workers)
+        print(f"Scraping {len(companies)} companies with 10 workers...")
         
-        # Process sequentially instead of parallel to avoid rate limits
-        for i, company in enumerate(companies, 1):
-            print(f"[Q{query_num}/{len(search_queries)}][{i}/{len(companies)}]", end=" ")
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_company = {
+                executor.submit(scraper.scrape_full_company_data, company): company 
+                for company in companies
+            }
             
-            try:
-                company_data = scraper.scrape_full_company_data(company)
+            for i, future in enumerate(as_completed(future_to_company), 1):
+                print(f"[Q{query_num}/{len(search_queries)}][{i}/{len(companies)}]", end=" ")
                 
-                # Only save if email was found AND not a law company
-                if company_data is not None:
-                    # Double-check not a law company
-                    name_lower = company_data.get('name', '').lower()
-                    content_lower = company_data.get('website_content', '').lower()[:1000]
-                    law_keywords = ['law firm', 'attorney', 'lawyer', 'legal services', 'counsel', 'esquire']
+                try:
+                    company_data = future.result(timeout=60)
                     
-                    is_law = any(kw in name_lower or kw in content_lower for kw in law_keywords)
-                    
-                    if not is_law:
-                        company_data['source_query'] = query
-                        all_scraped_data.append(company_data)
-                        already_scraped.add(normalize_url(company_data.get('url', '')))  # Add to set
-                        total_new_companies += 1
+                    # Only save if email was found AND not a law company
+                    if company_data is not None:
+                        # Double-check not a law company
+                        name_lower = company_data.get('name', '').lower()
+                        content_lower = company_data.get('website_content', '').lower()[:1000]
+                        law_keywords = ['law firm', 'attorney', 'lawyer', 'legal services', 'counsel', 'esquire']
                         
-                        # Save progress every 3 companies with emails
-                        if total_new_companies % 3 == 0:
-                            with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
-                                json.dump(all_scraped_data, f, indent=2)
-                            print(f"  💾 Saved {total_new_companies} companies")
-                    else:
-                        print(f"✗ Skipped (law company)")
-                        already_scraped.add(normalize_url(company.get('url', '')))  # Still track to avoid re-scraping
-            except Exception as e:
-                print(f"✗ Error: {str(e)[:30]}")
-            
-            # Rate limit: wait 2 seconds between each company
-            if i < len(companies):
-                time.sleep(2)
+                        is_law = any(kw in name_lower or kw in content_lower for kw in law_keywords)
+                        
+                        if not is_law:
+                            company_data['source_query'] = query
+                            all_scraped_data.append(company_data)
+                            already_scraped.add(normalize_url(company_data.get('url', '')))
+                            total_new_companies += 1
+                            
+                            # Save progress every 10 companies
+                            if total_new_companies % 10 == 0:
+                                with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
+                                    json.dump(all_scraped_data, f, indent=2)
+                                print(f"  💾 Saved {total_new_companies} companies")
+                        else:
+                            print(f"✗ Skipped (law)")
+                            already_scraped.add(normalize_url(future_to_company[future].get('url', '')))
+                except Exception as e:
+                    print(f"✗ Error: {str(e)[:30]}")
+        
+        # Small delay between queries only
+        time.sleep(1)
         
         continue  # Skip the old parallel code
         
@@ -598,10 +621,9 @@ def main():
         
         print(f"\n✓ Completed query {query_num}/{len(search_queries)}")
         
-        # Rate limit between queries: wait 5 seconds
+        # Minimal delay between queries
         if query_num < len(search_queries):
-            print("⏳ Waiting 5 seconds before next query...")
-            time.sleep(5)
+            time.sleep(0.5)
     
     # Save final results
     with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
