@@ -94,7 +94,7 @@ class EmailSender:
         grade = speed_test.get("grade", "N/A")
         
         # Craft conversion-optimized prompt for GPT-4.1
-        prompt = f"""You are Jonas Weber, Senior Performance Consultant at {config.COMPANY_NAME} - a premium agency specializing in website optimization for local businesses.
+        prompt = f"""You are Jonas from {config.COMPANY_NAME} - a premium agency specializing in website optimization for local businesses.
 
 MISSION: Write a highly personalized, conversion-focused cold email that gets replies.
 
@@ -122,8 +122,7 @@ CLOSING (Soft CTA + Value):
 - Easy action: "Just reply with 'interested' or email {config.CONTACT_EMAIL}"
 
 SIGNATURE (Professional + Approachable):
-Jonas Weber
-Senior Performance Consultant
+Jonas
 {config.COMPANY_NAME}
 {config.CONTACT_EMAIL}
 
