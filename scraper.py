@@ -360,12 +360,12 @@ class CompanyScraper:
         # Generated emails (info@, contact@) work 90% of the time, so trust them
         if found_on_site:
             print(f"Verifying...", end=" ")
-            if not self.verify_email_exists(email):
+            if not self.verify_email_exists(email, found_on_site=True):
                 print("✗ Invalid (skipping)")
                 return None
             print("✓ Verified!")
         else:
-            # Generated email - just check domain has MX records
+            # Generated email - thorough SMTP verification
             try:
                 domain = email.split('@')[1]
                 dns.resolver.resolve(domain, 'MX')
