@@ -1,16 +1,233 @@
-# High-converting small business queries - Oregon focus
+# Home Services
 plumbing company contact Oregon
 hvac contractor contact Oregon
-roofing company contact Oregon  
+roofing company contact Oregon
+electrician contact Oregon
 painting contractor contact Oregon
-landscaping service contact Oregon
-auto body shop contact Oregon
-hair salon contact Oregon
-spa wellness center contact Oregon
-pet grooming contact Oregon
-yoga studio contact Oregon
-photography studio contact Oregon
-catering service contact Oregon
-florist shop contact Oregon
-cleaning service contact Oregon
+landscaping company contact Oregon
+lawn care service contact Oregon
+pest control company contact Oregon
+carpet cleaning service contact Oregon
+window cleaning service contact Oregon
+gutter cleaning service contact Oregon
+handyman service contact Oregon
+garage door repair contact Oregon
+locksmith service contact Oregon
 moving company contact Oregon
+junk removal service contact Oregon
+cleaning service contact Oregon
+maid service contact Oregon
+pressure washing service contact Oregon
+tree service contact Oregon
+fence company contact Oregon
+deck builder contact Oregon
+concrete contractor contact Oregon
+paving company contact Oregon
+driveway sealing contact Oregon
+pool service contact Oregon
+chimney sweep contact Oregon
+appliance repair contact Oregon
+
+# Automotive
+auto repair shop contact Oregon
+auto body shop contact Oregon
+car detailing service contact Oregon
+oil change service contact Oregon
+tire shop contact Oregon
+car wash contact Oregon
+transmission repair contact Oregon
+muffler shop contact Oregon
+brake repair shop contact Oregon
+windshield repair contact Oregon
+
+# Health & Wellness
+dental office contact Oregon
+dentist contact Oregon
+chiropractic office contact Oregon
+physical therapy clinic contact Oregon
+massage therapy contact Oregon
+acupuncture clinic contact Oregon
+medical clinic contact Oregon
+urgent care center contact Oregon
+veterinary clinic contact Oregon
+pet hospital contact Oregon
+optometry office contact Oregon
+
+# Beauty & Personal Care
+hair salon contact Oregon
+beauty salon contact Oregon
+barber shop contact Oregon
+nail salon contact Oregon
+spa contact Oregon
+day spa contact Oregon
+tanning salon contact Oregon
+waxing salon contact Oregon
+tattoo shop contact Oregon
+piercing studio contact Oregon
+
+# Fitness
+gym contact Oregon
+fitness center contact Oregon
+yoga studio contact Oregon
+pilates studio contact Oregon
+crossfit gym contact Oregon
+martial arts studio contact Oregon
+dance studio contact Oregon
+personal training contact Oregon
+
+# Food & Beverage
+restaurant contact Oregon
+cafe contact Oregon
+coffee shop contact Oregon
+bakery contact Oregon
+pizza restaurant contact Oregon
+italian restaurant contact Oregon
+mexican restaurant contact Oregon
+chinese restaurant contact Oregon
+thai restaurant contact Oregon
+sushi restaurant contact Oregon
+steakhouse contact Oregon
+seafood restaurant contact Oregon
+breakfast restaurant contact Oregon
+diner contact Oregon
+food truck contact Oregon
+catering service contact Oregon
+bar contact Oregon
+brewery contact Oregon
+winery contact Oregon
+ice cream shop contact Oregon
+
+# Professional Services
+accounting firm contact Oregon
+bookkeeping service contact Oregon
+tax preparation service contact Oregon
+insurance agency contact Oregon
+real estate agency contact Oregon
+real estate agent contact Oregon
+property management company contact Oregon
+marketing agency contact Oregon
+advertising agency contact Oregon
+graphic design company contact Oregon
+web design company contact Oregon
+photography studio contact Oregon
+video production company contact Oregon
+event planning service contact Oregon
+wedding planner contact Oregon
+printing service contact Oregon
+courier service contact Oregon
+staffing agency contact Oregon
+recruiting firm contact Oregon
+consulting firm contact Oregon
+
+# Retail
+florist contact Oregon
+flower shop contact Oregon
+gift shop contact Oregon
+jewelry store contact Oregon
+clothing boutique contact Oregon
+shoe store contact Oregon
+furniture store contact Oregon
+mattress store contact Oregon
+appliance store contact Oregon
+electronics store contact Oregon
+pet store contact Oregon
+pet grooming contact Oregon
+bike shop contact Oregon
+sporting goods store contact Oregon
+
+# Construction & Trades
+general contractor contact Oregon
+home builder contact Oregon
+remodeling contractor contact Oregon
+kitchen remodeling contact Oregon
+bathroom remodeling contact Oregon
+basement finishing contact Oregon
+home addition contractor contact Oregon
+siding contractor contact Oregon
+stucco contractor contact Oregon
+masonry contractor contact Oregon
+drywall contractor contact Oregon
+flooring contractor contact Oregon
+tile contractor contact Oregon
+countertop installer contact Oregon
+cabinet maker contact Oregon
+insulation contractor contact Oregon
+foundation repair contact Oregon
+waterproofing contractor contact Oregon
+
+# Specialty Services
+storage facility contact Oregon
+self storage contact Oregon
+dry cleaning service contact Oregon
+laundromat contact Oregon
+tailoring service contact Oregon
+shoe repair shop contact Oregon
+watch repair shop contact Oregon
+jewelry repair contact Oregon
+computer repair shop contact Oregon
+phone repair shop contact Oregon
+towing service contact Oregon
+auto glass repair contact Oregon
+
+# Home Improvement Retail
+hardware store contact Oregon
+lumber yard contact Oregon
+home improvement store contact Oregon
+
+# Education & Childcare
+daycare center contact Oregon
+preschool contact Oregon
+tutoring service contact Oregon
+music school contact Oregon
+art school contact Oregon
+driving school contact Oregon
+
+# Entertainment & Recreation
+bowling alley contact Oregon
+movie theater contact Oregon
+arcade contact Oregon
+mini golf contact Oregon
+escape room contact Oregon
+trampoline park contact Oregon
+
+# Pet Services
+dog grooming contact Oregon
+dog training contact Oregon
+pet sitting service contact Oregon
+dog walking service contact Oregon
+pet boarding contact Oregon
+
+# Senior Services
+senior living facility contact Oregon
+assisted living facility contact Oregon
+home care service contact Oregon
+
+# Party & Events
+party rental company contact Oregon
+bounce house rental contact Oregon
+tent rental company contact Oregon
+DJ service contact Oregon
+live band contact Oregon
+
+# Miscellaneous Services
+notary public contact Oregon
+document shredding service contact Oregon
+mailbox rental contact Oregon
+packing service contact Oregon
+interior designer contact Oregon
+landscape designer contact Oregon
+architect contact Oregon
+home inspector contact Oregon
+contractor contact Oregon
+security system installer contact Oregon
+home automation contact Oregon
+solar panel installer contact Oregon
+HVAC installation contact Oregon
+furnace repair contact Oregon
+air conditioning repair contact Oregon
+water heater repair contact Oregon
+septic service contact Oregon
+well drilling contact Oregon
+excavation contractor contact Oregon
+land clearing service contact Oregon
+snow removal service contact Oregon

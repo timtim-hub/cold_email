@@ -37,40 +37,30 @@ class EmailSender:
         page_size = speed_test.get("page_size", "N/A")
         grade = speed_test.get("grade", "N/A")
         
-        # Craft detailed prompt for GPT
+        # Craft detailed prompt for GPT - SHORTER VERSION
         prompt = f"""You are Jonas from {config.COMPANY_NAME}, {config.COMPANY_DESCRIPTION}.
 
-Write a highly personalized cold email about their website performance issues.
+Write a SHORT, punchy cold email about their website performance issues.
 
-🚨 CRITICAL - ABSOLUTELY NO PLACEHOLDERS ALLOWED:
-- You MUST sign the email as "Jonas" or "Best regards,\n\nJonas\nLeSavoir.Agency"
-- NEVER EVER use [Your Name], [Your Position], or ANY brackets [ ]
-- You are Jonas - use your actual name in the signature
-- Do NOT write [Your Name] - write Jonas
-- Do NOT write [Your Position] - just write Jonas or omit position
-- The signature must be real text, not a template
+🚨 NO PLACEHOLDERS - Sign as "Jonas" (not [Your Name])
 
-EMAIL CONTENT:
-1. Immediately grabs attention - you've analyzed their website {website_url}
-2. Reference their actual business from this content: {company_data.get('website_title', 'their website')}
-3. Present REAL speed test data: Load time is {load_time}, Performance grade: {grade}
-4. Explain business impact: customer loss, poor SEO, wasted PPC money, competitive disadvantage
-5. Reference specific aspects from their website to prove you researched them
-6. Create urgency about the performance issues
-7. DO NOT give them tips on HOW to fix it - that's what we do for them
-8. Offer that {config.COMPANY_NAME} can fix these issues quickly
-9. Call-to-action: reply or email {config.CONTACT_EMAIL}
-10. Professional, urgent tone (not pushy)
-11. 250-350 words
+EMAIL (120-180 words MAX):
+1. Hook: "I ran a speed test on {website_url}"
+2. Their metrics: Load time {load_time}, Grade: {grade}
+3. Impact: Lost customers, poor SEO, wasted ads
+4. DO NOT give tips on HOW to fix - that's our service
+5. Offer: We can fix this fast
+6. CTA: Reply or email {config.CONTACT_EMAIL}
+7. Professional, urgent, direct
 
-🚨 SIGNATURE MUST BE (example):
+SIGNATURE:
 Best regards,
 
 Jonas
 LeSavoir.Agency
 {config.CONTACT_EMAIL}
 
-NO PLACEHOLDERS. NO BRACKETS. Just write "Jonas".
+Write "Jonas" - NOT [Your Name] or placeholders.
 
 Company Details:
 - Company: {company_name}
