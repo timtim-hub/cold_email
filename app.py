@@ -424,7 +424,7 @@ Examples:
 Generate ONLY the search queries, one per line, no numbering, no explanations."""
 
         response = client.chat.completions.create(
-            model="gpt-5",  # Using latest GPT-5
+            model="gpt-5-mini",  # Using GPT-5 mini for cost efficiency
             messages=[
                 {"role": "system", "content": "You are a search query generator for local business outreach. Generate diverse, specific search queries."},
                 {"role": "user", "content": prompt}

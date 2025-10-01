@@ -93,9 +93,9 @@ Email body:"""
         try:
             print(f"Generating personalized email for {company_name}...")
             
-            # Use OpenAI Chat Completions API (GPT-4 or latest available)
+            # Use OpenAI Chat Completions API with GPT-5 mini for cost efficiency
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",  # Will use GPT-4 or latest available
+                model="gpt-5-mini",  # Using GPT-5 mini for cost efficiency
                 messages=[
                     {"role": "system", "content": "You are a professional website performance consultant writing personalized outreach emails."},
                     {"role": "user", "content": prompt}
