@@ -35,11 +35,55 @@ class EmailSender:
             return f"{prefix}@{config.CATCH_ALL_DOMAIN}"
         return self.from_email
         
+    def clean_company_name(self, raw_name: str) -> str:
+        """
+        Clean up scraped company names by removing page titles, separators, etc.
+        Examples:
+        - "Contact – OR Concrete Inc." -> "OR Concrete Inc."
+        - "Home | Vice Heating" -> "Vice Heating"
+        - "About Us - Deck Builder" -> "Deck Builder"
+        """
+        import re
+        
+        # Remove common page title prefixes
+        prefixes_to_remove = [
+            r'^Contact\s*[-–|:]\s*',
+            r'^Home\s*[-–|:]\s*',
+            r'^About\s*(Us)?\s*[-–|:]\s*',
+            r'^Welcome\s*(to)?\s*[-–|:]\s*',
+            r'^Index\s*[-–|:]\s*',
+        ]
+        
+        cleaned = raw_name
+        for prefix in prefixes_to_remove:
+            cleaned = re.sub(prefix, '', cleaned, flags=re.IGNORECASE)
+        
+        # Remove "Welcome to" from anywhere
+        cleaned = re.sub(r'\bWelcome to\b\s*', '', cleaned, flags=re.IGNORECASE)
+        
+        # If there are separators, intelligently pick the company name
+        # Priority: | then – then - then :
+        separators = ['|', '–', ' - ', ':']
+        for sep in separators:
+            if sep in cleaned:
+                parts = [p.strip() for p in cleaned.split(sep)]
+                # Filter out very short parts and common page words
+                page_words = ['home', 'contact', 'about', 'welcome', 'services']
+                filtered_parts = [p for p in parts if len(p) > 3 and p.lower() not in page_words]
+                
+                if filtered_parts:
+                    # Take the first substantial part (usually the company name)
+                    cleaned = filtered_parts[0]
+                break
+            
+        return cleaned.strip()
+    
     def generate_personalized_email(self, company_data: Dict) -> Dict:
         """
         Generate a hyper-personalized email using OpenAI API
         """
-        company_name = company_data.get("name", "there")
+        raw_company_name = company_data.get("name", "there")
+        company_name = self.clean_company_name(raw_company_name)
         website_url = company_data.get("url", "")
         website_content = company_data.get("website_content", "")[:2000]  # Limit for token efficiency
         speed_test = company_data.get("speed_test", {})
