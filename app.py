@@ -425,12 +425,13 @@ Examples:
 Generate ONLY the search queries, one per line, no numbering, no explanations."""
 
         response = client.chat.completions.create(
-            model="gpt-5",  # Using GPT-5 for high-quality query generation
+            model="gpt-4.1-2025-04-14",  # GPT-4.1 - latest model with best instruction following
             messages=[
                 {"role": "system", "content": "You are a search query generator for local business outreach. Generate diverse, specific search queries."},
                 {"role": "user", "content": prompt}
             ],
-            max_completion_tokens=2000  # GPT-5 only supports default temperature=1
+            max_tokens=2000,
+            temperature=0.8
         )
         
         generated_text = response.choices[0].message.content.strip()
