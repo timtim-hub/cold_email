@@ -261,6 +261,31 @@
             </div>
         </div>
 
+        <!-- API Credits & Errors Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- API Credits Monitor -->
+            <div class="glass rounded-2xl p-6 border border-gray-700">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-coins text-yellow-400 mr-3"></i>
+                    API Credits & Usage
+                </h3>
+                <div id="api-credits" class="space-y-3">
+                    <p class="text-gray-500 text-sm">Loading API status...</p>
+                </div>
+            </div>
+
+            <!-- Errors Monitor -->
+            <div class="glass rounded-2xl p-6 border border-gray-700">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-exclamation-triangle text-red-400 mr-3"></i>
+                    Recent Errors & Alerts
+                </h3>
+                <div id="errors-feed" class="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+                    <p class="text-gray-500 text-sm">Loading errors...</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Charts Row -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- Email Sending Rate Chart -->
@@ -591,16 +616,142 @@
             // audio.play().catch(() => {});
         }
 
+        // Update API credits
+        async function updateAPICredits() {
+            try {
+                const response = await fetch('/api/credits');
+                const credits = await response.json();
+                
+                const container = document.getElementById('api-credits');
+                container.innerHTML = '';
+                
+                // Scrapfly
+                const scrapflyCard = createCreditCard(
+                    'Scrapfly',
+                    credits.scrapfly,
+                    credits.scrapfly.error ? 'red' : (credits.scrapfly.remaining < 100 ? 'yellow' : 'green'),
+                    'fa-spider'
+                );
+                container.appendChild(scrapflyCard);
+                
+                // OpenAI
+                const openaiCard = createCreditCard(
+                    'OpenAI (GPT-5 Mini)',
+                    credits.openai,
+                    credits.openai.error ? 'red' : 'green',
+                    'fa-brain'
+                );
+                container.appendChild(openaiCard);
+                
+                // Serper
+                const serperCard = createCreditCard(
+                    'Serper.dev',
+                    credits.serper,
+                    'blue',
+                    'fa-search'
+                );
+                container.appendChild(serperCard);
+                
+                // RapidAPI
+                const rapidCard = createCreditCard(
+                    'RapidAPI',
+                    credits.rapidapi,
+                    'purple',
+                    'fa-bolt'
+                );
+                container.appendChild(rapidCard);
+                
+            } catch (error) {
+                console.error('Error updating API credits:', error);
+            }
+        }
+
+        // Create credit card HTML
+        function createCreditCard(name, data, color, icon) {
+            const div = document.createElement('div');
+            div.className = `bg-gray-800/30 rounded-lg p-3 border-l-4 border-${color}-500`;
+            
+            let statusHTML = '';
+            if (data.error) {
+                statusHTML = `<span class="text-red-400 text-xs">Error: ${data.error}</span>`;
+            } else if (data.remaining !== 'N/A') {
+                if (typeof data.remaining === 'number') {
+                    statusHTML = `<span class="text-${color}-400 font-semibold">${data.remaining.toLocaleString()} remaining</span>`;
+                    if (data.used) {
+                        statusHTML += `<span class="text-gray-500 text-xs ml-2">(${data.used.toLocaleString()} used)</span>`;
+                    }
+                } else {
+                    statusHTML = `<span class="text-gray-400 text-xs">${data.remaining}</span>`;
+                }
+            }
+            if (data.note) {
+                statusHTML += `<br><span class="text-gray-500 text-xs">${data.note}</span>`;
+            }
+            
+            div.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas ${icon} text-${color}-400 mr-2"></i>
+                        <div>
+                            <div class="font-semibold text-sm">${name}</div>
+                            <div class="text-xs mt-1">${statusHTML}</div>
+                        </div>
+                    </div>
+                    <div class="w-2 h-2 rounded-full bg-${color}-400"></div>
+                </div>
+            `;
+            return div;
+        }
+
+        // Update errors feed
+        async function updateErrors() {
+            try {
+                const response = await fetch('/api/errors');
+                const data = await response.json();
+                
+                const container = document.getElementById('errors-feed');
+                
+                if (data.errors.length === 0) {
+                    container.innerHTML = '<p class="text-green-400 text-sm"><i class="fas fa-check-circle mr-2"></i>No errors detected! System running smoothly.</p>';
+                    return;
+                }
+                
+                container.innerHTML = data.errors.map(error => {
+                    const severityColor = error.severity === 'error' ? 'red' : 'yellow';
+                    const icon = error.severity === 'error' ? 'exclamation-circle' : 'exclamation-triangle';
+                    
+                    return `
+                        <div class="bg-gray-800/30 rounded-lg p-2 border-l-2 border-${severityColor}-500">
+                            <div class="flex items-start space-x-2">
+                                <i class="fas fa-${icon} text-${severityColor}-400 mt-1"></i>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs text-gray-400 mb-1">${error.source}</div>
+                                    <div class="text-xs text-gray-300 break-words">${error.message}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error updating errors feed:', error);
+            }
+        }
+
         // Initialize and set up intervals
         function init() {
             updateDashboard();
             updateActivity();
             updateCharts();
+            updateAPICredits();
+            updateErrors();
             
             // Update intervals
-            setInterval(updateDashboard, 3000);  // Every 3 seconds
-            setInterval(updateActivity, 5000);   // Every 5 seconds
-            setInterval(updateCharts, 30000);    // Every 30 seconds
+            setInterval(updateDashboard, 3000);   // Every 3 seconds
+            setInterval(updateActivity, 5000);    // Every 5 seconds
+            setInterval(updateCharts, 30000);     // Every 30 seconds
+            setInterval(updateAPICredits, 10000); // Every 10 seconds
+            setInterval(updateErrors, 5000);      // Every 5 seconds
         }
 
         // Start when page loads

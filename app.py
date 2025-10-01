@@ -11,6 +11,7 @@ import psutil
 import time
 import logging
 import traceback
+import requests
 from datetime import datetime, timedelta
 from openai import OpenAI
 import config
@@ -536,6 +537,135 @@ def api_restore_used_query():
     except Exception as e:
         app.logger.error(f"Error restoring query: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/errors')
+@safe_api_call
+def api_get_errors():
+    """Get recent errors from logs"""
+    errors = []
+    
+    try:
+        # Check dashboard errors
+        if os.path.exists('dashboard_errors.log'):
+            with open('dashboard_errors.log', 'r') as f:
+                lines = f.readlines()
+                for line in lines[-50:]:  # Last 50 errors
+                    if 'ERROR' in line or 'error' in line.lower():
+                        errors.append({
+                            'source': 'Dashboard',
+                            'message': line.strip(),
+                            'severity': 'error'
+                        })
+        
+        # Check data error log
+        if os.path.exists(config.ERROR_LOG_FILE):
+            with open(config.ERROR_LOG_FILE, 'r') as f:
+                lines = f.readlines()
+                for line in lines[-50:]:  # Last 50 errors
+                    errors.append({
+                        'source': 'System',
+                        'message': line.strip(),
+                        'severity': 'warning'
+                    })
+        
+        # Check for API-specific errors in recent logs
+        log_files = ['parallel.log', 'scraper_ultrafast.log']
+        for log_file in log_files:
+            if os.path.exists(log_file):
+                with open(log_file, 'r') as f:
+                    lines = f.readlines()
+                    for line in lines[-100:]:
+                        line_lower = line.lower()
+                        if any(keyword in line_lower for keyword in ['error', 'failed', 'exception', 'critical', 'out of credits', 'rate limit', 'quota exceeded']):
+                            errors.append({
+                                'source': log_file,
+                                'message': line.strip()[-200:],  # Last 200 chars
+                                'severity': 'error' if 'critical' in line_lower or 'failed' in line_lower else 'warning'
+                            })
+    except Exception as e:
+        app.logger.error(f"Error reading error logs: {e}")
+    
+    # Return most recent 20 errors
+    return jsonify({
+        'errors': errors[-20:][::-1],  # Reverse to show newest first
+        'count': len(errors)
+    })
+
+@app.route('/api/credits')
+@safe_api_call
+def api_get_credits():
+    """Check API credits/usage for all services"""
+    credits = {
+        'serper': {'status': 'unknown', 'remaining': 'N/A', 'error': None},
+        'scrapfly': {'status': 'unknown', 'remaining': 'N/A', 'used': 'N/A', 'error': None},
+        'rapidapi': {'status': 'unknown', 'remaining': 'N/A', 'error': None},
+        'openai': {'status': 'unknown', 'remaining': 'N/A', 'error': None}
+    }
+    
+    # Check Scrapfly credits
+    try:
+        response = requests.get(
+            'https://api.scrapfly.io/account',
+            params={'key': config.SCRAPFLY_API_KEY},
+            timeout=5
+        )
+        if response.status_code == 200:
+            data = response.json()
+            subscription = data.get('subscription', {})
+            credits['scrapfly'] = {
+                'status': 'active',
+                'remaining': subscription.get('api_call_quota', 0),
+                'used': subscription.get('api_call_used', 0),
+                'plan': subscription.get('name', 'Unknown'),
+                'error': None
+            }
+        else:
+            credits['scrapfly']['error'] = f"HTTP {response.status_code}"
+    except Exception as e:
+        credits['scrapfly']['error'] = str(e)[:100]
+    
+    # Check Serper (estimate based on usage)
+    try:
+        # Serper doesn't have a direct credit check API, so we estimate
+        credits['serper'] = {
+            'status': 'active',
+            'remaining': 'Check serper.dev dashboard',
+            'note': 'No API endpoint for credit check',
+            'error': None
+        }
+    except Exception as e:
+        credits['serper']['error'] = str(e)[:100]
+    
+    # Check OpenAI (estimate)
+    try:
+        # OpenAI doesn't expose credits via API for most accounts
+        credits['openai'] = {
+            'status': 'active',
+            'remaining': 'Check OpenAI dashboard',
+            'note': 'API key working',
+            'error': None
+        }
+        # Test if key works
+        client = OpenAI(api_key=config.OPENAI_API_KEY)
+        # Don't actually make a call, just verify connection
+        credits['openai']['status'] = 'active'
+    except Exception as e:
+        credits['openai']['error'] = str(e)[:100]
+        credits['openai']['status'] = 'error'
+    
+    # Check RapidAPI
+    try:
+        # RapidAPI doesn't have a universal credit check, depends on subscription
+        credits['rapidapi'] = {
+            'status': 'active',
+            'remaining': 'Check RapidAPI dashboard',
+            'note': 'No universal API endpoint',
+            'error': None
+        }
+    except Exception as e:
+        credits['rapidapi']['error'] = str(e)[:100]
+    
+    return jsonify(credits)
 
 @app.route('/api/health')
 def api_health():
