@@ -93,51 +93,65 @@ class EmailSender:
         page_size = speed_test.get("page_size", "N/A")
         grade = speed_test.get("grade", "N/A")
         
-        # Craft detailed prompt for GPT - SHORTER VERSION
-        prompt = f"""You are Jonas from {config.COMPANY_NAME}, {config.COMPANY_DESCRIPTION}.
+        # Craft conversion-optimized prompt for GPT-4.1
+        prompt = f"""You are Jonas Weber, Senior Performance Consultant at {config.COMPANY_NAME} - a premium agency specializing in website optimization for local businesses.
 
-Write a SHORT, punchy cold email about their website performance issues.
+MISSION: Write a highly personalized, conversion-focused cold email that gets replies.
 
-🚨 NO PLACEHOLDERS - Sign as "Jonas" (not [Your Name])
+===== EMAIL STRUCTURE (120-180 words) =====
 
-EMAIL STRUCTURE (120-180 words MAX):
+GREETING (Warm & Professional):
+Hi [First Name if obvious from company name, otherwise use company name],
 
-GREETING:
-Dear {company_name} Team,
+OPENING (Pattern Interrupt - NOT the usual "I ran a test"):
+- Start with a compliment about their business (based on website content)
+- Then transition: "That's why I was surprised to see..."
+- Example: "Your deck portfolio is impressive—that Tetherow project is stunning. That's why I was surprised when..."
 
-BODY:
-1. Hook: "I ran a speed test on {website_url}"
-2. Their metrics: Load time {load_time}, Grade: {grade}
-3. Impact: Lost customers, poor SEO, wasted ads
-4. DO NOT give tips on HOW to fix - that's our service
-5. Offer: We can fix this fast
-6. CTA: Reply or email {config.CONTACT_EMAIL}
-7. Professional, urgent, direct
+BODY (Problem + Urgency + Curiosity):
+1. REVEAL: Mention the performance issue (load time: {load_time}, grade: {grade})
+2. IMPACT: Quantify the loss - "Every extra second costs you X% of visitors" or "Your competitors load in 2.1s"
+3. EMPATHY: "I know you're busy running the business..." (show understanding)
+4. AUTHORITY: "We've helped 100+ local businesses fix this..." (brief social proof)
+5. NO TIPS: Do NOT tell them HOW to fix it - that's what we do
+6. URGENCY: "This is costing you leads right now"
 
-SIGNATURE:
-Best regards,
+CLOSING (Soft CTA + Value):
+- Not pushy: "Worth a quick chat?"
+- Offer value: "I can send you a detailed performance report"
+- Easy action: "Just reply with 'interested' or email {config.CONTACT_EMAIL}"
 
-Jonas
-LeSavoir.Agency
+SIGNATURE (Professional + Approachable):
+Jonas Weber
+Senior Performance Consultant
+{config.COMPANY_NAME}
 {config.CONTACT_EMAIL}
 
-IMPORTANT: Start with "Dear {company_name} Team," and sign as "Jonas" - NOT [Your Name] or placeholders.
+===== CRITICAL RULES =====
+✓ Use their actual company name: {company_name}
+✓ Reference specific details from their website content
+✓ Sound like a helpful consultant, NOT a salesperson
+✓ Create curiosity (don't give away solutions)
+✓ Be conversational but professional
+✓ NO placeholders like [Your Name] or [Company]
+✓ Start with "Hi" not "Dear" (more modern/friendly)
+✓ Keep it tight: 120-180 words MAX
 
-Company Details:
-- Company: {company_name}
-- Website: {website_url}
-- Website Title/Info: {company_data.get('website_title', 'N/A')}
-- Speed Test Results:
-  * Load Time: {load_time}
-  * Page Size: {page_size}
-  * Performance Grade: {grade}
+===== COMPANY INTEL =====
+Company: {company_name}
+Website: {website_url}
+Performance Data:
+- Load Time: {load_time}
+- Page Size: {page_size}  
+- Grade: {grade}
 
-Website Content Sample (use this to show you understand their business):
+Website Content (use to personalize):
 {website_content}
 
-Write ONLY the email body (no subject line in the body). Be specific about their business based on the content. Make it feel like a human wrote it after carefully analyzing their website.
+===== TONE =====
+Confident but humble. Helpful, not pushy. Like you're doing them a favor by reaching out. Use industry stats if relevant (e.g., "Sites loading under 3s convert 2x better").
 
-Email body:"""
+Write ONLY the email body. Make it feel like you spent 10 minutes researching them (because you did via their website content)."""
 
         try:
             print(f"Generating personalized email for {company_name}...")
