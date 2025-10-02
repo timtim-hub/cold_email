@@ -750,6 +750,75 @@ def api_ab_testing_toggle():
             'message': str(e)
         }), 500
 
+@app.route('/api/spam-test/score')
+@safe_api_call
+def api_spam_test_score():
+    """Get current deliverability score"""
+    try:
+        from spam_tester import SpamTester
+        tester = SpamTester()
+        score_data = tester.get_deliverability_score()
+        return jsonify(score_data)
+    except Exception as e:
+        app.logger.error(f"Error getting spam test score: {e}")
+        return jsonify({
+            'score': 0,
+            'grade': 'Unknown',
+            'issues': [str(e)],
+            'recommendations': [],
+            'status': 'error'
+        }), 500
+
+@app.route('/api/spam-test/send', methods=['POST'])
+@safe_api_call
+def api_spam_test_send():
+    """Send a test email to check spam score"""
+    try:
+        data = request.json or {}
+        test_email = data.get('email', '').strip()
+        
+        if not test_email or '@' not in test_email:
+            return jsonify({
+                'success': False,
+                'message': 'Valid email address required'
+            }), 400
+        
+        from spam_tester import SpamTester
+        tester = SpamTester()
+        result = tester.run_manual_test(test_email)
+        
+        return jsonify({
+            'success': result['status'] == 'sent',
+            'message': result.get('message', ''),
+            'result': result
+        })
+    except Exception as e:
+        app.logger.error(f"Error sending spam test: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/spam-test/history')
+@safe_api_call
+def api_spam_test_history():
+    """Get spam test history"""
+    try:
+        from spam_tester import SpamTester
+        tester = SpamTester()
+        history = tester.get_test_history()
+        return jsonify({
+            'tests': history,
+            'count': len(history)
+        })
+    except Exception as e:
+        app.logger.error(f"Error getting spam test history: {e}")
+        return jsonify({
+            'tests': [],
+            'count': 0,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/health')
 def api_health():
     """Health check endpoint"""

@@ -370,6 +370,99 @@
             </div>
         </div>
 
+        <!-- Email Deliverability Testing -->
+        <div class="glass rounded-2xl p-6 border border-gray-700 mb-8">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <i class="fas fa-shield-alt text-green-400 mr-3"></i>
+                Email Deliverability & Spam Testing
+            </h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Deliverability Score -->
+                <div class="glass rounded-xl p-4 border border-gray-800">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-gray-400 text-sm">Deliverability Score</span>
+                        <span id="spam-score-grade" class="px-2 py-1 rounded text-xs font-bold bg-gray-700">-</span>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <span id="spam-score-value" class="text-4xl font-bold">--</span>
+                        <span class="text-gray-500 text-lg mb-1">/100</span>
+                    </div>
+                    <div class="mt-2 h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div id="spam-score-bar" class="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Send Test Email -->
+                <div class="glass rounded-xl p-4 border border-gray-800">
+                    <div class="mb-3">
+                        <span class="text-gray-400 text-sm">Send Test Email</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input 
+                            type="email" 
+                            id="test-email-input" 
+                            placeholder="test-xxxxx@mail-tester.com"
+                            class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                        >
+                        <button 
+                            onclick="sendSpamTest()" 
+                            id="send-test-btn"
+                            class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap"
+                        >
+                            <i class="fas fa-paper-plane mr-1"></i> Send
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">
+                        Get test email from <a href="https://www.mail-tester.com" target="_blank" class="text-blue-400 hover:underline">mail-tester.com</a>
+                    </p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="glass rounded-xl p-4 border border-gray-800">
+                    <div class="mb-3">
+                        <span class="text-gray-400 text-sm">Quick Health Check</span>
+                    </div>
+                    <div id="spam-health-items" class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-spinner fa-spin text-gray-500"></i>
+                            <span class="text-gray-500">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Issues & Recommendations -->
+            <div id="spam-recommendations" class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4" style="display: none;">
+                <div>
+                    <h4 class="text-sm font-semibold text-red-400 mb-2">
+                        <i class="fas fa-exclamation-circle mr-1"></i> Issues Found
+                    </h4>
+                    <ul id="spam-issues-list" class="space-y-1 text-sm text-gray-400">
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-blue-400 mb-2">
+                        <i class="fas fa-lightbulb mr-1"></i> Recommendations
+                    </h4>
+                    <ul id="spam-recommendations-list" class="space-y-1 text-sm text-gray-400">
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Test History -->
+            <div class="mt-4">
+                <details class="glass rounded-lg p-3 border border-gray-800">
+                    <summary class="cursor-pointer text-sm font-medium text-gray-300 hover:text-white transition">
+                        <i class="fas fa-history mr-2"></i> View Test History
+                    </summary>
+                    <div id="spam-test-history" class="mt-3 space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+                        <p class="text-gray-500 text-sm">No tests yet</p>
+                    </div>
+                </details>
+            </div>
+        </div>
+
         <!-- Charts Row -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- Email Sending Rate Chart -->
@@ -910,6 +1003,159 @@
             }
         }
 
+        // Spam Testing Functions
+        async function updateSpamScore() {
+            try {
+                const response = await fetch('/api/spam-test/score');
+                const data = await response.json();
+                
+                // Update score
+                document.getElementById('spam-score-value').textContent = data.score || '--';
+                document.getElementById('spam-score-bar').style.width = (data.score || 0) + '%';
+                
+                // Update grade with color
+                const gradeEl = document.getElementById('spam-score-grade');
+                gradeEl.textContent = data.grade || '-';
+                const gradeColors = {
+                    'A': 'bg-green-600',
+                    'B': 'bg-blue-600',
+                    'C': 'bg-yellow-600',
+                    'D': 'bg-red-600'
+                };
+                gradeEl.className = `px-2 py-1 rounded text-xs font-bold ${gradeColors[data.grade] || 'bg-gray-700'}`;
+                
+                // Update health items
+                const healthItems = document.getElementById('spam-health-items');
+                if (data.issues && data.issues.length > 0) {
+                    healthItems.innerHTML = data.issues.slice(0, 3).map(issue => `
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-times-circle text-red-400"></i>
+                            <span class="text-gray-300">${issue}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    healthItems.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span class="text-gray-300">All checks passed!</span>
+                        </div>
+                    `;
+                }
+                
+                // Show/hide recommendations section
+                const recsSection = document.getElementById('spam-recommendations');
+                if ((data.issues && data.issues.length > 0) || (data.recommendations && data.recommendations.length > 0)) {
+                    recsSection.style.display = 'grid';
+                    
+                    // Update issues
+                    const issuesList = document.getElementById('spam-issues-list');
+                    if (data.issues && data.issues.length > 0) {
+                        issuesList.innerHTML = data.issues.map(issue => `
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-exclamation-circle text-red-400 mt-1"></i>
+                                <span>${issue}</span>
+                            </li>
+                        `).join('');
+                    } else {
+                        issuesList.innerHTML = '<li class="text-gray-500">No issues found</li>';
+                    }
+                    
+                    // Update recommendations
+                    const recsList = document.getElementById('spam-recommendations-list');
+                    if (data.recommendations && data.recommendations.length > 0) {
+                        recsList.innerHTML = data.recommendations.map(rec => `
+                            <li class="flex items-start gap-2">
+                                <i class="fas ${rec.includes('✅') ? 'fa-check-circle text-green-400' : 'fa-lightbulb text-blue-400'} mt-1"></i>
+                                <span>${rec}</span>
+                            </li>
+                        `).join('');
+                    } else {
+                        recsList.innerHTML = '<li class="text-gray-500">No recommendations</li>';
+                    }
+                } else {
+                    recsSection.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Error updating spam score:', error);
+            }
+        }
+
+        async function sendSpamTest() {
+            const input = document.getElementById('test-email-input');
+            const btn = document.getElementById('send-test-btn');
+            const email = input.value.trim();
+            
+            if (!email || !email.includes('@')) {
+                showToast('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            // Disable button
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Sending...';
+            
+            try {
+                const response = await fetch('/api/spam-test/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('✅ Test email sent! Check ' + email.split('@')[1] + ' for results', 'success');
+                    input.value = '';
+                    // Refresh history
+                    updateSpamTestHistory();
+                } else {
+                    showToast('❌ Failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error sending spam test:', error);
+                showToast('❌ Error sending test email', 'error');
+            } finally {
+                // Re-enable button
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i> Send';
+            }
+        }
+
+        async function updateSpamTestHistory() {
+            try {
+                const response = await fetch('/api/spam-test/history');
+                const data = await response.json();
+                
+                const historyDiv = document.getElementById('spam-test-history');
+                if (data.tests && data.tests.length > 0) {
+                    historyDiv.innerHTML = data.tests.reverse().slice(0, 10).map(test => {
+                        const time = new Date(test.timestamp).toLocaleString();
+                        const statusColors = {
+                            'sent': 'text-green-400',
+                            'pending': 'text-yellow-400',
+                            'failed': 'text-red-400'
+                        };
+                        return `
+                            <div class="flex items-center justify-between p-2 bg-gray-800/50 rounded">
+                                <div class="flex-1">
+                                    <span class="text-sm text-gray-300">${test.test_email}</span>
+                                    <span class="text-xs text-gray-500 block">${time}</span>
+                                </div>
+                                <span class="text-xs ${statusColors[test.status] || 'text-gray-400'} font-medium">
+                                    ${test.status}
+                                </span>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    historyDiv.innerHTML = '<p class="text-gray-500 text-sm">No tests yet</p>';
+                }
+            } catch (error) {
+                console.error('Error updating spam test history:', error);
+            }
+        }
+
         // Initialize and set up intervals
         function init() {
             updateDashboard();
@@ -918,6 +1164,8 @@
             updateAPICredits();
             updateErrors();
             updateABTesting();
+            updateSpamScore();
+            updateSpamTestHistory();
             
             // Update intervals
             setInterval(updateDashboard, 3000);   // Every 3 seconds
@@ -926,6 +1174,7 @@
             setInterval(updateAPICredits, 10000); // Every 10 seconds
             setInterval(updateErrors, 5000);      // Every 5 seconds
             setInterval(updateABTesting, 10000);  // Every 10 seconds
+            setInterval(updateSpamScore, 30000);  // Every 30 seconds
         }
 
         // Start when page loads
