@@ -1,225 +1,233 @@
-# Home Services
-plumbing company contact Oregon
-hvac contractor contact Oregon
-roofing company contact Oregon
-electrician contact Oregon
-painting contractor contact Oregon
-landscaping company contact Oregon
-lawn care service contact Oregon
-pest control company contact Oregon
-carpet cleaning service contact Oregon
-window cleaning service contact Oregon
-gutter cleaning service contact Oregon
-handyman service contact Oregon
-garage door repair contact Oregon
-locksmith service contact Oregon
-moving company contact Oregon
-junk removal service contact Oregon
-cleaning service contact Oregon
-maid service contact Oregon
-pressure washing service contact Oregon
-tree service contact Oregon
-fence company contact Oregon
-deck builder contact Oregon
-concrete contractor contact Oregon
-paving company contact Oregon
-driveway sealing contact Oregon
-pool service contact Oregon
-chimney sweep contact Oregon
-appliance repair contact Oregon
+# Home Services - Diverse Small US Cities
+plumbing company contact Boise Idaho
+hvac contractor contact Santa Fe New Mexico
+roofing company contact Bozeman Montana
+electrician contact Burlington Vermont
+painting contractor contact Asheville North Carolina
+landscaping company contact Fort Collins Colorado
+lawn care service contact Madison Wisconsin
+pest control company contact Charleston South Carolina
+carpet cleaning service contact Spokane Washington
+window cleaning service contact Reno Nevada
+gutter cleaning service contact Eugene Oregon
+handyman service contact Des Moines Iowa
+garage door repair contact Sioux Falls South Dakota
+locksmith service contact Ann Arbor Michigan
+moving company contact Durham North Carolina
+junk removal service contact Lincoln Nebraska
+cleaning service contact Fargo North Dakota
+maid service contact Bend Oregon
+pressure washing service contact Savannah Georgia
+tree service contact Traverse City Michigan
+fence company contact Flagstaff Arizona
+deck builder contact Greenville South Carolina
+concrete contractor contact Missoula Montana
+paving company contact Rochester Minnesota
+driveway sealing contact Tacoma Washington
+pool service contact Chattanooga Tennessee
+chimney sweep contact Portsmouth New Hampshire
+appliance repair contact Bellingham Washington
+
 # Automotive
-auto repair shop contact Oregon
-auto body shop contact Oregon
-car detailing service contact Oregon
-oil change service contact Oregon
-tire shop contact Oregon
-car wash contact Oregon
-transmission repair contact Oregon
-muffler shop contact Oregon
-brake repair shop contact Oregon
-windshield repair contact Oregon
+auto repair shop contact Salem Oregon
+auto body shop contact Cheyenne Wyoming
+car detailing service contact Santa Barbara California
+oil change service contact Boulder Colorado
+tire shop contact Wilmington North Carolina
+car wash contact Billings Montana
+transmission repair contact Olympia Washington
+muffler shop contact Pueblo Colorado
+brake repair shop contact Rapid City South Dakota
+windshield repair contact Helena Montana
+
 # Health & Wellness
-dental office contact Oregon
-dentist contact Oregon
-chiropractic office contact Oregon
-physical therapy clinic contact Oregon
-massage therapy contact Oregon
-acupuncture clinic contact Oregon
-medical clinic contact Oregon
-urgent care center contact Oregon
-veterinary clinic contact Oregon
-pet hospital contact Oregon
-optometry office contact Oregon
+dental office contact Duluth Minnesota
+dentist contact Anchorage Alaska
+chiropractic office contact Roanoke Virginia
+physical therapy clinic contact Morgantown West Virginia
+massage therapy contact Ithaca New York
+acupuncture clinic contact Charlottesville Virginia
+medical clinic contact Santa Cruz California
+urgent care center contact Pensacola Florida
+veterinary clinic contact Coeur d'Alene Idaho
+pet hospital contact Kalamazoo Michigan
+optometry office contact Bloomington Indiana
+
 # Beauty & Personal Care
-hair salon contact Oregon
-beauty salon contact Oregon
-barber shop contact Oregon
-nail salon contact Oregon
-spa contact Oregon
-day spa contact Oregon
-tanning salon contact Oregon
-waxing salon contact Oregon
-tattoo shop contact Oregon
-piercing studio contact Oregon
+hair salon contact Athens Georgia
+beauty salon contact Portland Maine
+barber shop contact Lafayette Louisiana
+nail salon contact Corvallis Oregon
+spa contact Jackson Wyoming
+day spa contact Saratoga Springs New York
+tanning salon contact Columbia Missouri
+waxing salon contact Gainesville Florida
+tattoo shop contact Missoula Montana
+piercing studio contact Ashland Oregon
+
 # Fitness
-gym contact Oregon
-fitness center contact Oregon
-yoga studio contact Oregon
-pilates studio contact Oregon
-crossfit gym contact Oregon
-martial arts studio contact Oregon
-dance studio contact Oregon
-personal training contact Oregon
+gym contact Bozeman Montana
+fitness center contact Burlington Vermont
+yoga studio contact Boulder Colorado
+pilates studio contact Santa Fe New Mexico
+crossfit gym contact Bend Oregon
+martial arts studio contact Eugene Oregon
+dance studio contact Asheville North Carolina
+personal training contact Fort Collins Colorado
+
 # Food & Beverage
-restaurant contact Oregon
-cafe contact Oregon
-coffee shop contact Oregon
-bakery contact Oregon
-pizza restaurant contact Oregon
-italian restaurant contact Oregon
-mexican restaurant contact Oregon
-chinese restaurant contact Oregon
-thai restaurant contact Oregon
-sushi restaurant contact Oregon
-steakhouse contact Oregon
-seafood restaurant contact Oregon
-breakfast restaurant contact Oregon
-diner contact Oregon
-food truck contact Oregon
-catering service contact Oregon
-bar contact Oregon
-brewery contact Oregon
-winery contact Oregon
-ice cream shop contact Oregon
+restaurant contact Boise Idaho
+cafe contact Portland Maine
+coffee shop contact Madison Wisconsin
+bakery contact Charleston South Carolina
+pizza restaurant contact Burlington Vermont
+italian restaurant contact Savannah Georgia
+mexican restaurant contact Santa Fe New Mexico
+chinese restaurant contact Spokane Washington
+thai restaurant contact Eugene Oregon
+sushi restaurant contact Bozeman Montana
+steakhouse contact Sioux Falls South Dakota
+seafood restaurant contact Wilmington North Carolina
+breakfast restaurant contact Fargo North Dakota
+diner contact Lincoln Nebraska
+food truck contact Fort Collins Colorado
+catering service contact Asheville North Carolina
+bar contact Missoula Montana
+brewery contact Grand Rapids Michigan
+winery contact Charlottesville Virginia
+ice cream shop contact Burlington Vermont
+
 # Professional Services
-accounting firm contact Oregon
-bookkeeping service contact Oregon
-tax preparation service contact Oregon
-insurance agency contact Oregon
-real estate agency contact Oregon
-real estate agent contact Oregon
-property management company contact Oregon
-marketing agency contact Oregon
-advertising agency contact Oregon
-graphic design company contact Oregon
-web design company contact Oregon
-photography studio contact Oregon
-video production company contact Oregon
-event planning service contact Oregon
-wedding planner contact Oregon
-printing service contact Oregon
-courier service contact Oregon
-staffing agency contact Oregon
-recruiting firm contact Oregon
-consulting firm contact Oregon
+accounting firm contact Des Moines Iowa
+bookkeeping service contact Santa Fe New Mexico
+tax preparation service contact Reno Nevada
+insurance agency contact Spokane Washington
+real estate agency contact Boise Idaho
+real estate agent contact Asheville North Carolina
+property management company contact Fort Collins Colorado
+marketing agency contact Madison Wisconsin
+advertising agency contact Charleston South Carolina
+graphic design company contact Portland Maine
+web design company contact Eugene Oregon
+photography studio contact Bozeman Montana
+video production company contact Boulder Colorado
+event planning service contact Savannah Georgia
+wedding planner contact Santa Barbara California
+printing service contact Ann Arbor Michigan
+courier service contact Durham North Carolina
+staffing agency contact Greenville South Carolina
+recruiting firm contact Raleigh North Carolina
+consulting firm contact Burlington Vermont
+
 # Retail
-florist contact Oregon
-flower shop contact Oregon
-gift shop contact Oregon
-jewelry store contact Oregon
-clothing boutique contact Oregon
-shoe store contact Oregon
-furniture store contact Oregon
-mattress store contact Oregon
-appliance store contact Oregon
-electronics store contact Oregon
-pet store contact Oregon
-pet grooming contact Oregon
-bike shop contact Oregon
-sporting goods store contact Oregon
+florist contact Bend Oregon
+flower shop contact Santa Fe New Mexico
+gift shop contact Asheville North Carolina
+jewelry store contact Boise Idaho
+clothing boutique contact Charleston South Carolina
+shoe store contact Madison Wisconsin
+furniture store contact Spokane Washington
+mattress store contact Eugene Oregon
+appliance store contact Fort Collins Colorado
+electronics store contact Reno Nevada
+pet store contact Missoula Montana
+pet grooming contact Bellingham Washington
+bike shop contact Boulder Colorado
+sporting goods store contact Bozeman Montana
+
 # Construction & Trades
-general contractor contact Oregon
-home builder contact Oregon
-remodeling contractor contact Oregon
-kitchen remodeling contact Oregon
-bathroom remodeling contact Oregon
-basement finishing contact Oregon
-home addition contractor contact Oregon
-siding contractor contact Oregon
-stucco contractor contact Oregon
-masonry contractor contact Oregon
-drywall contractor contact Oregon
-flooring contractor contact Oregon
-tile contractor contact Oregon
-countertop installer contact Oregon
-cabinet maker contact Oregon
-insulation contractor contact Oregon
-foundation repair contact Oregon
-waterproofing contractor contact Oregon
+general contractor contact Salem Oregon
+home builder contact Boise Idaho
+remodeling contractor contact Santa Fe New Mexico
+kitchen remodeling contact Asheville North Carolina
+bathroom remodeling contact Eugene Oregon
+basement finishing contact Madison Wisconsin
+home addition contractor contact Fort Collins Colorado
+siding contractor contact Spokane Washington
+stucco contractor contact Santa Barbara California
+masonry contractor contact Charleston South Carolina
+drywall contractor contact Des Moines Iowa
+flooring contractor contact Burlington Vermont
+tile contractor contact Savannah Georgia
+countertop installer contact Reno Nevada
+cabinet maker contact Missoula Montana
+insulation contractor contact Fargo North Dakota
+foundation repair contact Sioux Falls South Dakota
+waterproofing contractor contact Portland Maine
+
 # Specialty Services
-storage facility contact Oregon
-self storage contact Oregon
-dry cleaning service contact Oregon
-laundromat contact Oregon
-tailoring service contact Oregon
-shoe repair shop contact Oregon
-watch repair shop contact Oregon
-jewelry repair contact Oregon
-computer repair shop contact Oregon
-phone repair shop contact Oregon
-towing service contact Oregon
-auto glass repair contact Oregon
+storage facility contact Bend Oregon
+self storage contact Boise Idaho
+dry cleaning service contact Santa Fe New Mexico
+laundromat contact Eugene Oregon
+tailoring service contact Charleston South Carolina
+shoe repair shop contact Madison Wisconsin
+watch repair shop contact Boulder Colorado
+jewelry repair contact Asheville North Carolina
+computer repair shop contact Fort Collins Colorado
+phone repair shop contact Spokane Washington
+towing service contact Billings Montana
+auto glass repair contact Tacoma Washington
+
 # Home Improvement Retail
-hardware store contact Oregon
-lumber yard contact Oregon
-home improvement store contact Oregon
+hardware store contact Salem Oregon
+lumber yard contact Bozeman Montana
+home improvement store contact Eugene Oregon
+
 # Education & Childcare
-daycare center contact Oregon
-preschool contact Oregon
-tutoring service contact Oregon
-music school contact Oregon
-art school contact Oregon
-driving school contact Oregon
+daycare center contact Burlington Vermont
+preschool contact Santa Fe New Mexico
+tutoring service contact Ann Arbor Michigan
+music school contact Asheville North Carolina
+art school contact Portland Maine
+driving school contact Boise Idaho
+
 # Entertainment & Recreation
-bowling alley contact Oregon
-movie theater contact Oregon
-arcade contact Oregon
-mini golf contact Oregon
-escape room contact Oregon
-trampoline park contact Oregon
+bowling alley contact Eugene Oregon
+movie theater contact Missoula Montana
+arcade contact Fort Collins Colorado
+mini golf contact Charleston South Carolina
+escape room contact Madison Wisconsin
+trampoline park contact Spokane Washington
+
 # Pet Services
-dog grooming contact Oregon
-dog training contact Oregon
-pet sitting service contact Oregon
-dog walking service contact Oregon
-pet boarding contact Oregon
+dog grooming contact Bend Oregon
+dog training contact Bozeman Montana
+pet sitting service contact Santa Fe New Mexico
+dog walking service contact Boulder Colorado
+pet boarding contact Eugene Oregon
+
 # Senior Services
-senior living facility contact Oregon
-assisted living facility contact Oregon
-home care service contact Oregon
+senior living facility contact Asheville North Carolina
+assisted living facility contact Savannah Georgia
+home care service contact Charleston South Carolina
+
 # Party & Events
-party rental company contact Oregon
-bounce house rental contact Oregon
-tent rental company contact Oregon
-DJ service contact Oregon
-live band contact Oregon
+party rental company contact Eugene Oregon
+bounce house rental contact Boise Idaho
+tent rental company contact Santa Fe New Mexico
+DJ service contact Fort Collins Colorado
+live band contact Missoula Montana
+
 # Miscellaneous Services
-notary public contact Oregon
-document shredding service contact Oregon
-mailbox rental contact Oregon
-packing service contact Oregon
-interior designer contact Oregon
-landscape designer contact Oregon
-architect contact Oregon
-home inspector contact Oregon
-contractor contact Oregon
-security system installer contact Oregon
-home automation contact Oregon
-solar panel installer contact Oregon
-HVAC installation contact Oregon
-furnace repair contact Oregon
-air conditioning repair contact Oregon
-water heater repair contact Oregon
-septic service contact Oregon
-well drilling contact Oregon
-excavation contractor contact Oregon
-land clearing service contact Oregon
-snow removal service contact Oregon
-plumbing company contact Bend Oregon
-bakery contact Missoula Montana
-auto repair shop contact Bismarck North Dakota
-landscaping contractor contact Burlington Vermont
-roofing contractor contact Roanoke Virginia
-landscaping company contact Traverse City Michigan
-bakery contact Bozeman Montana
-veterinary clinic contact Cheyenne Wyoming
+notary public contact Salem Oregon
+document shredding service contact Spokane Washington
+mailbox rental contact Eugene Oregon
+packing service contact Bend Oregon
+interior designer contact Asheville North Carolina
+landscape designer contact Boise Idaho
+architect contact Santa Fe New Mexico
+home inspector contact Burlington Vermont
+contractor contact Fort Collins Colorado
+security system installer contact Madison Wisconsin
+home automation contact Charleston South Carolina
+solar panel installer contact Santa Barbara California
+HVAC installation contact Bozeman Montana
+furnace repair contact Fargo North Dakota
+air conditioning repair contact Reno Nevada
+water heater repair contact Eugene Oregon
+septic service contact Coeur d'Alene Idaho
+well drilling contact Rapid City South Dakota
+excavation contractor contact Billings Montana
+land clearing service contact Missoula Montana
+snow removal service contact Burlington Vermont
