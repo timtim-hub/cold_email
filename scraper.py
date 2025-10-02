@@ -9,6 +9,7 @@ import os
 import http.client
 import urllib.parse
 import smtplib
+import socket
 import dns.resolver
 from typing import List, Dict, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -134,52 +135,77 @@ class CompanyScraper:
     
     def verify_email_exists(self, email: str, found_on_site: bool = False) -> bool:
         """
-        Improved email verification using DNS MX records and SMTP
-        More thorough verification for generated emails, lenient for found emails
+        ULTRA-STRICT email verification to prevent bounces
+        Always does full SMTP verification, even for emails found on websites
         """
         if not email or '@' not in email:
             return False
         
         try:
+            email_local = email.split('@')[0].lower()
             domain = email.split('@')[1].lower()
+            
+            # Filter out high-bounce risk email patterns
+            high_risk_patterns = [
+                'noreply', 'no-reply', 'donotreply', 'do-not-reply',
+                'bounce', 'mailer-daemon', 'postmaster',
+                'abuse', 'spam', 'devnull', 'null'
+            ]
+            if any(pattern in email_local for pattern in high_risk_patterns):
+                return False
             
             # Check DNS MX records (required)
             try:
-                mx_records = dns.resolver.resolve(domain, 'MX')
+                mx_records = dns.resolver.resolve(domain, 'MX', lifetime=8)
                 if not mx_records:
                     return False
                 mx_host = str(mx_records[0].exchange).rstrip('.')
-            except:
+            except Exception:
                 # No MX records = no email server
                 return False
             
-            # If email was found on site, DNS check is enough
-            if found_on_site:
-                return True
-            
-            # For generated emails, STRICT SMTP verification required
+            # ALWAYS do SMTP verification (even for emails found on site)
+            # This is critical to prevent bounces
             try:
-                server = smtplib.SMTP(timeout=5)
+                server = smtplib.SMTP(timeout=10)  # Increased timeout for reliability
                 server.set_debuglevel(0)
                 server.connect(mx_host, 25)
                 server.helo('mail.lesavoir.agency')
                 server.mail('verify@lesavoir.agency')
+                
+                # The critical check
                 code, message = server.rcpt(email)
                 server.quit()
                 
-                # ONLY accept if explicitly confirmed (250 or 251)
+                # ONLY accept if explicitly confirmed (250 = OK, 251 = will forward)
                 if code in [250, 251]:
                     return True
-                else:
-                    # Any other code = reject (550, 553, etc. = mailbox doesn't exist)
-                    return False
+                    
+                # Reject everything else:
+                # 450/451 = greylisting (might work later but unreliable)
+                # 452 = mailbox full
+                # 550 = mailbox unavailable (most common bounce)
+                # 551 = user not local
+                # 552 = exceeded storage
+                # 553 = mailbox name not allowed
+                # 554 = transaction failed
+                return False
+                
             except smtplib.SMTPServerDisconnected:
-                # Server doesn't allow verification - REJECT generated emails
+                # Server disconnected = can't verify = reject
                 return False
             except smtplib.SMTPConnectError:
+                # Can't connect to mail server = reject
+                return False
+            except smtplib.SMTPHeloError:
+                # HELO command failed = reject
+                return False
+            except socket.timeout:
+                # Timeout = unreliable server = reject
                 return False
             except Exception as e:
-                # Timeout or other error - REJECT (can't verify = don't send)
+                # Any other error = reject to be safe
+                print(f"      ⚠️  SMTP error for {email}: {type(e).__name__}")
                 return False
                 
         except Exception as e:
