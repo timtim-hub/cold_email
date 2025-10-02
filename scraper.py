@@ -144,6 +144,25 @@ class CompanyScraper:
         try:
             email_local = email.split('@')[0].lower()
             domain = email.split('@')[1].lower()
+            full_email = email.lower()
+            
+            # Filter out government, education, law firms, and directory sites
+            excluded_domains = [
+                '.gov',      # Government emails - not potential customers
+                '.edu',      # Educational institutions - not potential customers
+                'yelp.com',  # Yelp directory emails - not real businesses
+                'yellowpages.com',  # Yellow pages directory
+                'bbb.org',   # Better Business Bureau
+            ]
+            if any(excluded in domain for excluded in excluded_domains):
+                print(f"      ⚠️  Skipping excluded domain: {email}")
+                return False
+            
+            # Filter out law-related emails
+            law_patterns = ['law', 'attorney', 'legal', 'lawyer', 'esquire', 'esq']
+            if any(pattern in full_email for pattern in law_patterns):
+                print(f"      ⚠️  Skipping law-related email: {email}")
+                return False
             
             # Filter out high-bounce risk email patterns
             high_risk_patterns = [
