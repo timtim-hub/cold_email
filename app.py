@@ -667,6 +667,89 @@ def api_get_credits():
     
     return jsonify(credits)
 
+@app.route('/api/ab-testing')
+@safe_api_call
+def api_ab_testing_status():
+    """Get A/B testing status and statistics"""
+    try:
+        # Read current config
+        ab_enabled = config.AB_TESTING_ENABLED
+        
+        # Calculate stats from sent_emails
+        sent_data_path = 'data/sent_emails.json'
+        variant_stats = {
+            'A': {'count': 0, 'rate': 0},
+            'B': {'count': 0, 'rate': 0}
+        }
+        
+        if os.path.exists(sent_data_path):
+            with open(sent_data_path, 'r') as f:
+                sent_data = json.load(f)
+                detailed_history = sent_data.get('detailed_history', [])
+                
+                # Count variants
+                for entry in detailed_history:
+                    variant = entry.get('variant', 'A')
+                    if variant in variant_stats:
+                        variant_stats[variant]['count'] += 1
+                
+                # Calculate rates
+                total = variant_stats['A']['count'] + variant_stats['B']['count']
+                if total > 0:
+                    variant_stats['A']['rate'] = round((variant_stats['A']['count'] / total) * 100, 1)
+                    variant_stats['B']['rate'] = round((variant_stats['B']['count'] / total) * 100, 1)
+        
+        return jsonify({
+            'enabled': ab_enabled,
+            'price': config.SERVICE_PRICE,
+            'stats': variant_stats,
+            'total_sent': variant_stats['A']['count'] + variant_stats['B']['count']
+        })
+    except Exception as e:
+        app.logger.error(f"Error getting A/B testing status: {e}")
+        return jsonify({
+            'error': str(e),
+            'enabled': False
+        }), 500
+
+@app.route('/api/ab-testing/toggle', methods=['POST'])
+@safe_api_call
+def api_ab_testing_toggle():
+    """Toggle A/B testing on or off"""
+    try:
+        data = request.json or {}
+        enable = data.get('enable', False)
+        
+        # Update config.py file
+        config_path = 'config.py'
+        with open(config_path, 'r') as f:
+            content = f.read()
+        
+        # Replace the AB_TESTING_ENABLED line
+        import re
+        pattern = r'AB_TESTING_ENABLED\s*=\s*(True|False)'
+        replacement = f'AB_TESTING_ENABLED = {enable}'
+        new_content = re.sub(pattern, replacement, content)
+        
+        with open(config_path, 'w') as f:
+            f.write(new_content)
+        
+        # Reload config module
+        import importlib
+        importlib.reload(config)
+        
+        return jsonify({
+            'success': True,
+            'enabled': enable,
+            'message': f'A/B testing {"enabled" if enable else "disabled"}'
+        })
+    except Exception as e:
+        app.logger.error(f"Error toggling A/B testing: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 @app.route('/api/health')
 def api_health():
     """Health check endpoint"""

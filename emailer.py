@@ -78,23 +78,9 @@ class EmailSender:
             
         return cleaned.strip()
     
-    def generate_personalized_email(self, company_data: Dict) -> Dict:
-        """
-        Generate a hyper-personalized email using OpenAI API
-        """
-        raw_company_name = company_data.get("name", "there")
-        company_name = self.clean_company_name(raw_company_name)
-        website_url = company_data.get("url", "")
-        website_content = company_data.get("website_content", "")[:2000]  # Limit for token efficiency
-        speed_test = company_data.get("speed_test", {})
-        
-        # Extract speed test metrics
-        load_time = speed_test.get("load_time", "N/A")
-        page_size = speed_test.get("page_size", "N/A")
-        grade = speed_test.get("grade", "N/A")
-        
-        # Craft conversion-optimized prompt for GPT-4.1
-        prompt = f"""You are Jonas from {config.COMPANY_NAME} - a premium agency specializing in website optimization for local businesses.
+    def get_email_prompt_variant_a(self, company_name, website_url, load_time, page_size, grade, website_content):
+        """Variant A: No pricing mentioned (control group)"""
+        return f"""You are Jonas from {config.COMPANY_NAME} - a premium agency specializing in website optimization for local businesses.
 
 MISSION: Write a highly personalized, conversion-focused cold email that gets replies.
 
@@ -153,6 +139,102 @@ Confident but humble. Helpful, not pushy. Like you're doing them a favor by reac
 
 Write ONLY the email body. Make it feel like you spent 10 minutes researching them (because you did via their website content)."""
 
+    def get_email_prompt_variant_b(self, company_name, website_url, load_time, page_size, grade, website_content):
+        """Variant B: Includes pricing ($299) - tests if transparency increases conversion"""
+        return f"""You are Jonas from {config.COMPANY_NAME} - a premium agency specializing in website optimization for local businesses.
+
+MISSION: Write a highly personalized, conversion-focused cold email that gets replies.
+
+===== EMAIL STRUCTURE (120-180 words) =====
+
+GREETING (Warm & Professional):
+Hi {company_name} Team,
+
+OPENING (Pattern Interrupt - NOT the usual "I ran a test"):
+- Start with a compliment about their business (based on website content)
+- Then transition: "That's why I was surprised to see..."
+- Example: "Your deck portfolio is impressive—that Tetherow project is stunning. That's why I was surprised when..."
+
+BODY (Problem + Urgency + Curiosity):
+1. REVEAL: Mention the performance issue (load time: {load_time}, grade: {grade})
+2. IMPACT: Quantify the loss - "Every extra second costs you X% of visitors" or "Your competitors load in 2.1s"
+3. EMPATHY: "I know you're busy running the business..." (show understanding)
+4. AUTHORITY: "We've helped 100+ local businesses fix this..." (brief social proof)
+5. NO TIPS: Do NOT tell them HOW to fix it - that's what we do
+6. URGENCY: "This is costing you leads right now"
+7. PRICING: Naturally mention "We can fix this for ${config.SERVICE_PRICE}" - be transparent about pricing
+
+CLOSING (Soft CTA + Value with Price):
+- Not pushy: "Worth a quick chat?"
+- Offer value: "I can send you a detailed performance report"
+- Price anchor: "The fix is ${config.SERVICE_PRICE} - typically pays for itself in a week"
+- Easy action: "Just reply with 'interested' or email {config.CONTACT_EMAIL}"
+
+SIGNATURE (Professional + Approachable):
+Jonas
+{config.COMPANY_NAME}
+{config.CONTACT_EMAIL}
+
+===== CRITICAL RULES =====
+✓ GREETING MUST BE: "Hi {company_name} Team," (CAPITAL T in "Team" - this is mandatory)
+✓ NEVER write "Hi {company_name} team," with lowercase t - that's grammatically incorrect
+✓ Use their actual company name: {company_name}
+✓ Reference specific details from their website content
+✓ Sound like a helpful consultant, NOT a salesperson
+✓ Create curiosity (don't give away solutions)
+✓ Be conversational but professional
+✓ NO placeholders like [Your Name] or [Company]
+✓ MUST mention the price ${config.SERVICE_PRICE} naturally in the email
+✓ Keep it tight: 120-180 words MAX
+
+===== COMPANY INTEL =====
+Company: {company_name}
+Website: {website_url}
+Performance Data:
+- Load Time: {load_time}
+- Page Size: {page_size}  
+- Grade: {grade}
+
+Website Content (use to personalize):
+{website_content}
+
+===== TONE =====
+Confident but humble. Helpful, not pushy. Transparent about pricing. Like you're doing them a favor by reaching out. Use industry stats if relevant (e.g., "Sites loading under 3s convert 2x better").
+
+Write ONLY the email body. Make it feel like you spent 10 minutes researching them (because you did via their website content)."""
+
+    def generate_personalized_email(self, company_data: Dict) -> Dict:
+        """
+        Generate a hyper-personalized email using OpenAI API
+        Supports A/B testing with pricing variant
+        """
+        import random
+        
+        raw_company_name = company_data.get("name", "there")
+        company_name = self.clean_company_name(raw_company_name)
+        website_url = company_data.get("url", "")
+        website_content = company_data.get("website_content", "")[:2000]  # Limit for token efficiency
+        speed_test = company_data.get("speed_test", {})
+        
+        # Extract speed test metrics
+        load_time = speed_test.get("load_time", "N/A")
+        page_size = speed_test.get("page_size", "N/A")
+        grade = speed_test.get("grade", "N/A")
+        
+        # A/B Testing: Select variant
+        if config.AB_TESTING_ENABLED:
+            variant = random.choice(['A', 'B'])
+        else:
+            variant = 'A'  # Default to variant A when A/B testing is off
+        
+        # Get appropriate prompt based on variant
+        if variant == 'B':
+            prompt = self.get_email_prompt_variant_b(company_name, website_url, load_time, page_size, grade, website_content)
+        else:
+            prompt = self.get_email_prompt_variant_a(company_name, website_url, load_time, page_size, grade, website_content)
+        
+        print(f"Using variant {variant} {'(with $' + str(config.SERVICE_PRICE) + ' pricing)' if variant == 'B' else '(no pricing)'}")
+        
         try:
             print(f"Generating personalized email for {company_name}...")
             
@@ -185,7 +267,8 @@ Write ONLY the email body. Make it feel like you spent 10 minutes researching th
             return {
                 "subject": subject,
                 "body": email_body,
-                "success": True
+                "success": True,
+                "variant": variant  # Track which variant was used for A/B testing
             }
             
         except Exception as e:
@@ -195,7 +278,8 @@ Write ONLY the email body. Make it feel like you spent 10 minutes researching th
                 "subject": "",
                 "body": "",
                 "success": False,
-                "error": str(e)
+                "error": str(e),
+                "variant": variant
             }
     
     def save_to_sent_folder(self, msg: MIMEMultipart):
@@ -286,9 +370,9 @@ Write ONLY the email body. Make it feel like you spent 10 minutes researching th
             print(f"Error loading sent emails: {e}")
             return set()
     
-    def save_sent_email(self, email: str, company_data: Dict):
+    def save_sent_email(self, email: str, company_data: Dict, variant: str = 'A'):
         """
-        Save email to sent list
+        Save email to sent list with A/B testing variant tracking
         """
         try:
             # Load existing sent emails
@@ -302,12 +386,13 @@ Write ONLY the email body. Make it feel like you spent 10 minutes researching th
             if email not in sent_data["sent_emails"]:
                 sent_data["sent_emails"].append(email)
             
-            # Add detailed history
+            # Add detailed history with A/B variant
             sent_data["detailed_history"].append({
                 "email": email,
                 "company": company_data.get("name"),
                 "url": company_data.get("url"),
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "variant": variant  # Track which email variant was sent
             })
             
             # Save back
@@ -444,8 +529,9 @@ def main():
         )
         
         if success:
-            # Save to sent list
-            sender.save_sent_email(company.get("email"), company)
+            # Save to sent list with A/B variant
+            variant = email_data.get("variant", "A")
+            sender.save_sent_email(company.get("email"), company, variant)
             sent_company_emails.append(company.get("email"))
             sent_count += 1
         else:

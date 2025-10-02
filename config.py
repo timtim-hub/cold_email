@@ -48,6 +48,10 @@ COMPANY_NAME = "LeSavoir.Agency"
 COMPANY_DESCRIPTION = "a full-service AI, web development and marketing agency"
 CONTACT_EMAIL = "contact@lesavoir.agency"
 
+# A/B Testing Configuration
+AB_TESTING_ENABLED = True  # Toggle from dashboard
+SERVICE_PRICE = 299  # USD - Price for variant B
+
 # Email Settings
 MAX_EMAILS_PER_RUN = 50
 DELAY_BETWEEN_EMAILS = 20  # seconds
