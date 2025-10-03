@@ -3,7 +3,7 @@ Web Dashboard for Cold Email System
 Beautiful GUI to monitor and control scraper and emailer
 """
 
-from flask import Flask, render_template, jsonify, request, Response
+from flask import Flask, render_template, jsonify, request, Response, session
 import json
 import os
 import subprocess
@@ -15,6 +15,7 @@ import requests
 from datetime import datetime, timedelta
 from openai import OpenAI
 import config
+import database
 
 # Configure logging
 logging.basicConfig(
@@ -27,6 +28,7 @@ logging.basicConfig(
 )
 
 app = Flask(__name__)
+app.secret_key = 'cold-email-saas-secret-key-change-in-production'
 app.logger.setLevel(logging.INFO)
 
 # Store process IDs
@@ -208,6 +210,134 @@ def get_chart_data():
         app.logger.error(f"Error generating chart data: {e}")
     
     return chart_data
+
+
+# ========== ACCOUNT MANAGEMENT ENDPOINTS ==========
+
+@app.route('/api/accounts')
+def api_get_accounts():
+    """Get all accounts"""
+    try:
+        accounts = database.get_all_accounts()
+        active_account = database.get_active_account()
+        return jsonify({
+            'accounts': accounts,
+            'active_account_id': active_account['id'] if active_account else None
+        })
+    except Exception as e:
+        app.logger.error(f"Error getting accounts: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/accounts/switch', methods=['POST'])
+def api_switch_account():
+    """Switch active account"""
+    try:
+        data = request.json
+        account_id = data.get('account_id')
+        
+        if not account_id:
+            return jsonify({'success': False, 'message': 'Account ID required'}), 400
+        
+        database.set_active_account(account_id)
+        account = database.get_account(account_id)
+        
+        return jsonify({
+            'success': True,
+            'account': account
+        })
+    except Exception as e:
+        app.logger.error(f"Error switching account: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/accounts/create', methods=['POST'])
+def api_create_account():
+    """Create new account"""
+    try:
+        data = request.json
+        name = data.get('name', '').strip()
+        company_name = data.get('company_name', '').strip()
+        contact_email = data.get('contact_email', '').strip()
+        
+        if not name:
+            return jsonify({'success': False, 'message': 'Account name required'}), 400
+        
+        account_id = database.create_account(name, company_name, contact_email)
+        account = database.get_account(account_id)
+        
+        return jsonify({
+            'success': True,
+            'account': account
+        })
+    except Exception as e:
+        app.logger.error(f"Error creating account: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/accounts/<int:account_id>/settings')
+def api_get_account_settings(account_id):
+    """Get account settings"""
+    try:
+        account = database.get_account(account_id)
+        smtp = database.get_smtp_settings(account_id)
+        api_keys = database.get_api_keys(account_id)
+        campaign = database.get_campaign_settings(account_id)
+        prompts = database.get_email_prompts(account_id)
+        
+        return jsonify({
+            'account': account,
+            'smtp': smtp,
+            'api_keys': api_keys,
+            'campaign': campaign,
+            'prompts': prompts
+        })
+    except Exception as e:
+        app.logger.error(f"Error getting account settings: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/accounts/<int:account_id>/smtp', methods=['POST'])
+def api_save_smtp_settings(account_id):
+    """Save SMTP settings for account"""
+    try:
+        data = request.json
+        database.save_smtp_settings(account_id, data)
+        return jsonify({'success': True})
+    except Exception as e:
+        app.logger.error(f"Error saving SMTP settings: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/accounts/<int:account_id>/api-keys', methods=['POST'])
+def api_save_api_keys(account_id):
+    """Save API keys for account"""
+    try:
+        data = request.json
+        database.save_api_keys(account_id, data)
+        return jsonify({'success': True})
+    except Exception as e:
+        app.logger.error(f"Error saving API keys: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/accounts/<int:account_id>/prompts', methods=['POST'])
+def api_save_email_prompt(account_id):
+    """Save email prompt for account"""
+    try:
+        data = request.json
+        database.save_email_prompt(
+            account_id,
+            data.get('variant_name'),
+            data.get('prompt_text'),
+            data.get('include_pricing', False),
+            data.get('price_amount')
+        )
+        return jsonify({'success': True})
+    except Exception as e:
+        app.logger.error(f"Error saving email prompt: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 @app.route('/')
 def dashboard():

@@ -75,13 +75,62 @@
                     <i class="fas fa-envelope-open-text text-3xl text-blue-400"></i>
                     <div>
                         <h1 class="text-2xl font-bold">Cold Email Dashboard</h1>
-                        <p class="text-sm text-gray-400">LeSavoir.Agency | Real-time Monitoring</p>
+                        <p class="text-sm text-gray-400">Multi-Account Campaign Manager</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-3">
+                    <!-- Account Switcher -->
+                    <div class="relative">
+                        <button 
+                            onclick="toggleAccountDropdown()" 
+                            id="account-switcher-btn"
+                            class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg text-sm font-semibold transition flex items-center space-x-2 min-w-[200px]"
+                        >
+                            <i class="fas fa-building"></i>
+                            <span id="current-account-name">Loading...</span>
+                            <i class="fas fa-chevron-down ml-auto"></i>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div 
+                            id="account-dropdown"
+                            class="hidden absolute right-0 mt-2 w-72 glass rounded-xl shadow-2xl border border-gray-700 z-50 max-h-96 overflow-y-auto"
+                        >
+                            <div class="p-2">
+                                <!-- Accounts List -->
+                                <div id="accounts-list" class="space-y-1">
+                                    <div class="p-3 text-center text-gray-400 text-sm">
+                                        Loading accounts...
+                                    </div>
+                                </div>
+                                
+                                <!-- Divider -->
+                                <div class="border-t border-gray-700 my-2"></div>
+                                
+                                <!-- Create New Account -->
+                                <button 
+                                    onclick="showCreateAccountModal()" 
+                                    class="w-full px-3 py-2 text-left hover:bg-gray-700/50 rounded-lg transition flex items-center space-x-2 text-green-400 font-medium"
+                                >
+                                    <i class="fas fa-plus-circle"></i>
+                                    <span>Create New Account</span>
+                                </button>
+                                
+                                <!-- Settings -->
+                                <button 
+                                    onclick="showSettingsModal()" 
+                                    class="w-full px-3 py-2 text-left hover:bg-gray-700/50 rounded-lg transition flex items-center space-x-2 text-gray-300"
+                                >
+                                    <i class="fas fa-cog"></i>
+                                    <span>Account Settings</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <a href="/queries" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-semibold transition flex items-center">
                         <i class="fas fa-search mr-2"></i>
-                        Manage Queries
+                        Queries
                     </a>
                     <div class="px-3 py-1 glass rounded-lg text-sm">
                         <i class="fas fa-clock text-blue-400 mr-2"></i>
@@ -513,6 +562,115 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Create Account Modal -->
+    <div id="create-account-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-50">
+        <div class="glass rounded-2xl p-8 max-w-md w-full mx-4 border border-gray-700">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-plus-circle text-green-400 mr-3"></i>
+                    Create New Account
+                </h2>
+                <button onclick="hideCreateAccountModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="create-account-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        Account Name <span class="text-red-400">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="new-account-name" 
+                        required
+                        class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="e.g., My New Campaign"
+                    >
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        Company Name
+                    </label>
+                    <input 
+                        type="text" 
+                        id="new-company-name"
+                        class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="e.g., Acme Corp"
+                    >
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        Contact Email
+                    </label>
+                    <input 
+                        type="email" 
+                        id="new-contact-email"
+                        class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="contact@example.com"
+                    >
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button 
+                        type="submit"
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition"
+                    >
+                        <i class="fas fa-check mr-2"></i>
+                        Create Account
+                    </button>
+                    <button 
+                        type="button"
+                        onclick="hideCreateAccountModal()"
+                        class="px-6 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg transition"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-50 overflow-y-auto">
+        <div class="glass rounded-2xl p-8 max-w-4xl w-full mx-4 my-8 border border-gray-700">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-cog text-blue-400 mr-3"></i>
+                    Account Settings
+                </h2>
+                <button onclick="hideSettingsModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Settings Tabs -->
+            <div class="flex space-x-2 mb-6 border-b border-gray-700">
+                <button onclick="showSettingsTab('smtp')" id="tab-smtp" class="px-4 py-2 font-semibold border-b-2 border-blue-500 text-blue-400">
+                    SMTP Settings
+                </button>
+                <button onclick="showSettingsTab('api')" id="tab-api" class="px-4 py-2 font-semibold border-b-2 border-transparent text-gray-400 hover:text-white">
+                    API Keys
+                </button>
+                <button onclick="showSettingsTab('prompts')" id="tab-prompts" class="px-4 py-2 font-semibold border-b-2 border-transparent text-gray-400 hover:text-white">
+                    Email Prompts
+                </button>
+                <button onclick="showSettingsTab('campaign')" id="tab-campaign" class="px-4 py-2 font-semibold border-b-2 border-transparent text-gray-400 hover:text-white">
+                    Campaign
+                </button>
+            </div>
+            
+            <!-- Settings Content -->
+            <div id="settings-content" class="space-y-6">
+                <div class="p-4 text-center text-gray-400">
+                    Loading settings...
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Toast Notifications -->
@@ -1156,8 +1314,375 @@
             }
         }
 
+        // ========== ACCOUNT MANAGEMENT ==========
+        
+        let currentAccountId = null;
+        let allAccounts = [];
+        
+        async function loadAccounts() {
+            try {
+                const response = await fetch('/api/accounts');
+                const data = await response.json();
+                
+                allAccounts = data.accounts;
+                currentAccountId = data.active_account_id;
+                
+                // Update current account name in header
+                const activeAccount = allAccounts.find(a => a.id === currentAccountId);
+                if (activeAccount) {
+                    document.getElementById('current-account-name').textContent = activeAccount.name;
+                }
+                
+                // Update accounts list in dropdown
+                const accountsList = document.getElementById('accounts-list');
+                if (allAccounts.length > 0) {
+                    accountsList.innerHTML = allAccounts.map(account => `
+                        <button 
+                            onclick="switchAccount(${account.id})" 
+                            class="w-full px-3 py-2 text-left hover:bg-gray-700/50 rounded-lg transition flex items-center justify-between ${account.id === currentAccountId ? 'bg-blue-600/20 border border-blue-500' : ''}"
+                        >
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-building ${account.id === currentAccountId ? 'text-blue-400' : 'text-gray-400'}"></i>
+                                <div>
+                                    <div class="font-medium">${account.name}</div>
+                                    ${account.company_name ? `<div class="text-xs text-gray-400">${account.company_name}</div>` : ''}
+                                </div>
+                            </div>
+                            ${account.id === currentAccountId ? '<i class="fas fa-check text-blue-400"></i>' : ''}
+                        </button>
+                    `).join('');
+                } else {
+                    accountsList.innerHTML = '<div class="p-3 text-center text-gray-500 text-sm">No accounts yet</div>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                showToast('Failed to load accounts', 'error');
+            }
+        }
+        
+        async function switchAccount(accountId) {
+            try {
+                const response = await fetch('/api/accounts/switch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ account_id: accountId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentAccountId = accountId;
+                    showToast(`Switched to ${data.account.name}`, 'success');
+                    hideAccountDropdown();
+                    
+                    // Reload the page to refresh all data
+                    setTimeout(() => window.location.reload(), 500);
+                } else {
+                    showToast('Failed to switch account', 'error');
+                }
+            } catch (error) {
+                console.error('Error switching account:', error);
+                showToast('Error switching account', 'error');
+            }
+        }
+        
+        function toggleAccountDropdown() {
+            const dropdown = document.getElementById('account-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+        
+        function hideAccountDropdown() {
+            document.getElementById('account-dropdown').classList.add('hidden');
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('account-dropdown');
+            const button = document.getElementById('account-switcher-btn');
+            if (!dropdown.contains(event.target) && !button.contains(event.target)) {
+                hideAccountDropdown();
+            }
+        });
+        
+        // Account Creation Modal
+        function showCreateAccountModal() {
+            document.getElementById('create-account-modal').classList.remove('hidden');
+            hideAccountDropdown();
+        }
+        
+        function hideCreateAccountModal() {
+            document.getElementById('create-account-modal').classList.add('hidden');
+            document.getElementById('create-account-form').reset();
+        }
+        
+        document.getElementById('create-account-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('new-account-name').value.trim();
+            const companyName = document.getElementById('new-company-name').value.trim();
+            const contactEmail = document.getElementById('new-contact-email').value.trim();
+            
+            try {
+                const response = await fetch('/api/accounts/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        company_name: companyName,
+                        contact_email: contactEmail
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`Account "${name}" created successfully!`, 'success');
+                    hideCreateAccountModal();
+                    loadAccounts();
+                    
+                    // Auto-switch to new account
+                    setTimeout(() => switchAccount(data.account.id), 500);
+                } else {
+                    showToast(data.message || 'Failed to create account', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating account:', error);
+                showToast('Error creating account', 'error');
+            }
+        });
+        
+        // Settings Modal
+        let currentSettingsTab = 'smtp';
+        
+        function showSettingsModal() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+            hideAccountDropdown();
+            loadAccountSettings();
+        }
+        
+        function hideSettingsModal() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+        
+        function showSettingsTab(tab) {
+            currentSettingsTab = tab;
+            
+            // Update tab styles
+            ['smtp', 'api', 'prompts', 'campaign'].forEach(t => {
+                const tabEl = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    tabEl.className = 'px-4 py-2 font-semibold border-b-2 border-blue-500 text-blue-400';
+                } else {
+                    tabEl.className = 'px-4 py-2 font-semibold border-b-2 border-transparent text-gray-400 hover:text-white';
+                }
+            });
+            
+            loadAccountSettings();
+        }
+        
+        async function loadAccountSettings() {
+            if (!currentAccountId) return;
+            
+            const content = document.getElementById('settings-content');
+            content.innerHTML = '<div class="p-4 text-center text-gray-400">Loading...</div>';
+            
+            try {
+                const response = await fetch(`/api/accounts/${currentAccountId}/settings`);
+                const data = await response.json();
+                
+                if (currentSettingsTab === 'smtp') {
+                    renderSMTPSettings(data.smtp || {});
+                } else if (currentSettingsTab === 'api') {
+                    renderAPIKeys(data.api_keys || {});
+                } else if (currentSettingsTab === 'prompts') {
+                    renderEmailPrompts(data.prompts || []);
+                } else if (currentSettingsTab === 'campaign') {
+                    renderCampaignSettings(data.campaign || {});
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                content.innerHTML = '<div class="p-4 text-center text-red-400">Error loading settings</div>';
+            }
+        }
+        
+        function renderSMTPSettings(smtp) {
+            const content = document.getElementById('settings-content');
+            content.innerHTML = `
+                <form id="smtp-form" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">SMTP Host</label>
+                            <input type="text" name="smtp_host" value="${smtp.smtp_host || ''}" 
+                                   class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">SMTP Port</label>
+                            <input type="number" name="smtp_port" value="${smtp.smtp_port || 587}" 
+                                   class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                        <input type="text" name="smtp_username" value="${smtp.smtp_username || ''}" 
+                               class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                        <input type="password" name="smtp_password" value="${smtp.smtp_password || ''}" 
+                               class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">From Email</label>
+                        <input type="email" name="from_email" value="${smtp.from_email || ''}" 
+                               class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" name="use_rotating_senders" ${smtp.use_rotating_senders ? 'checked' : ''} 
+                               class="mr-2">
+                        <label class="text-sm text-gray-300">Use Rotating Senders</label>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition">
+                        <i class="fas fa-save mr-2"></i>
+                        Save SMTP Settings
+                    </button>
+                </form>
+            `;
+            
+            document.getElementById('smtp-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+                data.use_rotating_senders = formData.has('use_rotating_senders');
+                
+                try {
+                    const response = await fetch(`/api/accounts/${currentAccountId}/smtp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (response.ok) {
+                        showToast('SMTP settings saved!', 'success');
+                    } else {
+                        showToast('Failed to save SMTP settings', 'error');
+                    }
+                } catch (error) {
+                    showToast('Error saving settings', 'error');
+                }
+            });
+        }
+        
+        function renderAPIKeys(keys) {
+            const content = document.getElementById('settings-content');
+            content.innerHTML = `
+                <form id="api-keys-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">OpenAI API Key</label>
+                        <input type="password" name="openai_key" value="${keys.openai_key || ''}" 
+                               class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Scrapfly API Key</label>
+                        <input type="password" name="scrapfly_key" value="${keys.scrapfly_key || ''}" 
+                               class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Serper API Key</label>
+                        <input type="password" name="serper_key" value="${keys.serper_key || ''}" 
+                               class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">RapidAPI Key</label>
+                        <input type="password" name="rapidapi_key" value="${keys.rapidapi_key || ''}" 
+                               class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition">
+                        <i class="fas fa-save mr-2"></i>
+                        Save API Keys
+                    </button>
+                </form>
+            `;
+            
+            document.getElementById('api-keys-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+                
+                try {
+                    const response = await fetch(`/api/accounts/${currentAccountId}/api-keys`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (response.ok) {
+                        showToast('API keys saved!', 'success');
+                    } else {
+                        showToast('Failed to save API keys', 'error');
+                    }
+                } catch (error) {
+                    showToast('Error saving API keys', 'error');
+                }
+            });
+        }
+        
+        function renderEmailPrompts(prompts) {
+            const content = document.getElementById('settings-content');
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <p class="text-gray-400 text-sm">Configure email prompts for this account. These will be used by the AI to generate personalized emails.</p>
+                    
+                    ${prompts.map(prompt => `
+                        <div class="glass p-4 rounded-lg border border-gray-700">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="font-semibold">${prompt.variant_name}</h3>
+                                <span class="text-xs px-2 py-1 rounded ${prompt.include_pricing ? 'bg-yellow-600' : 'bg-blue-600'}">
+                                    ${prompt.include_pricing ? `$${prompt.price_amount}` : 'No Pricing'}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-300">${prompt.prompt_text}</p>
+                        </div>
+                    `).join('')}
+                    
+                    <p class="text-gray-500 text-sm mt-4">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        To edit email prompts, you'll need to configure them via the database or add a dedicated prompt editor.
+                    </p>
+                </div>
+            `;
+        }
+        
+        function renderCampaignSettings(settings) {
+            const content = document.getElementById('settings-content');
+            content.innerHTML = `
+                <div class="glass p-4 rounded-lg border border-gray-700">
+                    <p class="text-gray-400 mb-4">Campaign settings like max emails per run and delays are currently managed via config files.</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-300">Max Emails Per Run:</span>
+                            <span class="font-semibold">${settings.max_emails_per_run || 50}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-300">Delay Between Emails:</span>
+                            <span class="font-semibold">${settings.delay_between_emails || 20}s</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-300">A/B Testing:</span>
+                            <span class="font-semibold">${settings.ab_testing_enabled ? 'Enabled' : 'Disabled'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-300">Scraper Workers:</span>
+                            <span class="font-semibold">${settings.scraper_max_workers || 100}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         // Initialize and set up intervals
         function init() {
+            loadAccounts();
             updateDashboard();
             updateActivity();
             updateCharts();
