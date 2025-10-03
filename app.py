@@ -339,6 +339,179 @@ def api_save_email_prompt(account_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
+def get_dashboard_stats_for_account(account_id):
+    """Get dashboard stats for specific account from database"""
+    stats = {
+        'emails_sent_today': 0,
+        'emails_sent_total': 0,
+        'companies_scraped': 0,
+        'companies_queued': 0,
+        'success_rate': 0,
+        'sending_rate': 0,
+        'last_email_time': None
+    }
+    
+    try:
+        with database.get_db() as conn:
+            cursor = conn.cursor()
+            
+            # Total emails sent for this account
+            cursor.execute(
+                "SELECT COUNT(*) FROM sent_emails WHERE account_id = ?",
+                (account_id,)
+            )
+            stats['emails_sent_total'] = cursor.fetchone()[0]
+            
+            # Emails sent today
+            cursor.execute("""
+                SELECT COUNT(*) FROM sent_emails 
+                WHERE account_id = ? AND DATE(sent_at) = DATE('now')
+            """, (account_id,))
+            stats['emails_sent_today'] = cursor.fetchone()[0]
+            
+            # Companies scraped (total)
+            cursor.execute(
+                "SELECT COUNT(*) FROM scraped_companies WHERE account_id = ?",
+                (account_id,)
+            )
+            total_scraped = cursor.fetchone()[0]
+            
+            # Companies queued (not sent yet)
+            cursor.execute(
+                "SELECT COUNT(*) FROM scraped_companies WHERE account_id = ? AND is_sent = 0",
+                (account_id,)
+            )
+            stats['companies_queued'] = cursor.fetchone()[0]
+            stats['companies_scraped'] = total_scraped
+            
+            # Success rate
+            if stats['companies_scraped'] > 0:
+                stats['success_rate'] = round((stats['emails_sent_total'] / stats['companies_scraped']) * 100, 1)
+            
+            # Last email time
+            cursor.execute("""
+                SELECT sent_at FROM sent_emails 
+                WHERE account_id = ? 
+                ORDER BY sent_at DESC LIMIT 1
+            """, (account_id,))
+            last_email = cursor.fetchone()
+            if last_email:
+                stats['last_email_time'] = last_email[0]
+            
+            # Sending rate (emails per minute in last 10)
+            cursor.execute("""
+                SELECT sent_at FROM sent_emails 
+                WHERE account_id = ? 
+                ORDER BY sent_at DESC LIMIT 10
+            """, (account_id,))
+            recent_times = [row[0] for row in cursor.fetchall()]
+            if len(recent_times) >= 2:
+                try:
+                    first_time = datetime.fromisoformat(recent_times[-1])
+                    last_time = datetime.fromisoformat(recent_times[0])
+                    time_diff = (last_time - first_time).total_seconds() / 60
+                    if time_diff > 0:
+                        stats['sending_rate'] = round(len(recent_times) / time_diff, 2)
+                except:
+                    pass
+    
+    except Exception as e:
+        app.logger.error(f"Error getting account stats: {e}")
+    
+    return stats
+
+
+def get_recent_activity_for_account(account_id):
+    """Get recent activity for specific account from database"""
+    activity = {
+        'recent_emails': [],
+        'recent_scraped': []
+    }
+    
+    try:
+        with database.get_db() as conn:
+            cursor = conn.cursor()
+            
+            # Recent emails
+            cursor.execute("""
+                SELECT email, sent_at, subject FROM sent_emails 
+                WHERE account_id = ? 
+                ORDER BY sent_at DESC LIMIT 20
+            """, (account_id,))
+            
+            for row in cursor.fetchall():
+                activity['recent_emails'].append({
+                    'email': row[0],
+                    'timestamp': row[1],
+                    'subject': row[2] or 'N/A'
+                })
+            
+            # Recent scraped companies
+            cursor.execute("""
+                SELECT company_name, website, email, scraped_at FROM scraped_companies 
+                WHERE account_id = ? 
+                ORDER BY scraped_at DESC LIMIT 20
+            """, (account_id,))
+            
+            for row in cursor.fetchall():
+                activity['recent_scraped'].append({
+                    'company_name': row[0] or 'Unknown',
+                    'website': row[1],
+                    'email': row[2],
+                    'scraped_at': row[3]
+                })
+    
+    except Exception as e:
+        app.logger.error(f"Error getting account activity: {e}")
+    
+    return activity
+
+
+def get_chart_data_for_account(account_id):
+    """Get chart data for specific account from database"""
+    chart_data = {
+        'hourly_sends': [],
+        'labels': []
+    }
+    
+    try:
+        with database.get_db() as conn:
+            cursor = conn.cursor()
+            
+            # Get emails from last 24 hours
+            cursor.execute("""
+                SELECT sent_at FROM sent_emails 
+                WHERE account_id = ? AND sent_at >= datetime('now', '-24 hours')
+                ORDER BY sent_at
+            """, (account_id,))
+            
+            emails = [row[0] for row in cursor.fetchall()]
+            
+            # Group by hour
+            hourly_counts = {}
+            for email_time in emails:
+                try:
+                    dt = datetime.fromisoformat(email_time)
+                    hour_key = dt.strftime('%Y-%m-%d %H:00')
+                    hourly_counts[hour_key] = hourly_counts.get(hour_key, 0) + 1
+                except:
+                    pass
+            
+            # Generate labels for last 24 hours
+            now = datetime.now()
+            for i in range(24, 0, -1):
+                hour = now - timedelta(hours=i)
+                hour_key = hour.strftime('%Y-%m-%d %H:00')
+                label = hour.strftime('%H:00')
+                chart_data['labels'].append(label)
+                chart_data['hourly_sends'].append(hourly_counts.get(hour_key, 0))
+    
+    except Exception as e:
+        app.logger.error(f"Error getting chart data: {e}")
+    
+    return chart_data
+
+
 @app.route('/')
 def dashboard():
     """Render main dashboard"""
@@ -351,24 +524,50 @@ def dashboard():
 @app.route('/api/status')
 @safe_api_call
 def api_status():
-    """Get current status"""
-    return jsonify({
-        'processes': get_process_status(),
-        'stats': get_stats(),
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    })
+    """Get current status for active account"""
+    try:
+        active_account = database.get_active_account()
+        if not active_account:
+            return jsonify({'error': 'No active account'}), 400
+        
+        stats = get_dashboard_stats_for_account(active_account['id'])
+        
+        return jsonify({
+            'processes': get_process_status(),
+            'stats': stats,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+    except Exception as e:
+        app.logger.error(f"Error getting status: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/activity')
 @safe_api_call
 def api_activity():
-    """Get recent activity"""
-    return jsonify(get_recent_activity())
+    """Get recent activity for active account"""
+    try:
+        active_account = database.get_active_account()
+        if not active_account:
+            return jsonify({'error': 'No active account'}), 400
+        
+        return jsonify(get_recent_activity_for_account(active_account['id']))
+    except Exception as e:
+        app.logger.error(f"Error getting activity: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/charts')
 @safe_api_call
 def api_charts():
-    """Get chart data"""
-    return jsonify(get_chart_data())
+    """Get chart data for active account"""
+    try:
+        active_account = database.get_active_account()
+        if not active_account:
+            return jsonify({'error': 'No active account'}), 400
+        
+        return jsonify(get_chart_data_for_account(active_account['id']))
+    except Exception as e:
+        app.logger.error(f"Error getting charts: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/start', methods=['POST'])
 @safe_api_call
