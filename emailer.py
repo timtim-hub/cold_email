@@ -11,17 +11,18 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict, List, Optional
 from openai import OpenAI
-import config
+from account_config import get_account_config
 
 
 class EmailSender:
     def __init__(self):
-        self.smtp_host = config.SMTP_HOST
-        self.smtp_port = config.SMTP_PORT
-        self.smtp_username = config.SMTP_USERNAME
-        self.smtp_password = config.SMTP_PASSWORD
-        self.from_email = config.FROM_EMAIL
-        self.openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+        self.account_config = get_account_config()
+        self.smtp_host = self.account_config.SMTP_HOST
+        self.smtp_port = self.account_config.SMTP_PORT
+        self.smtp_username = self.account_config.SMTP_USERNAME
+        self.smtp_password = self.account_config.SMTP_PASSWORD
+        self.from_email = self.account_config.FROM_EMAIL
+        self.openai_client = OpenAI(api_key=self.account_config.OPENAI_API_KEY)
         self.current_sender_index = 0  # For rotating sender addresses
         
     def get_rotating_sender(self) -> str:
@@ -29,10 +30,13 @@ class EmailSender:
         Get next rotating sender address from catch-all domain.
         This bypasses per-address rate limits while all emails go to your inbox.
         """
-        if config.USE_ROTATING_SENDERS:
-            prefix = config.ROTATING_SENDER_PREFIXES[self.current_sender_index % len(config.ROTATING_SENDER_PREFIXES)]
+        if self.account_config.USE_ROTATING_SENDERS and self.account_config.ROTATING_SENDER_PREFIXES:
+            prefix = self.account_config.ROTATING_SENDER_PREFIXES[
+                self.current_sender_index % len(self.account_config.ROTATING_SENDER_PREFIXES)
+            ]
             self.current_sender_index += 1
-            return f"{prefix}@{config.CATCH_ALL_DOMAIN}"
+            domain = self.from_email.split('@')[1]
+            return f"{prefix}@{domain}"
         return self.from_email
         
     def clean_company_name(self, raw_name: str) -> str:
@@ -80,7 +84,7 @@ class EmailSender:
     
     def get_email_prompt_variant_a(self, company_name, website_url, load_time, page_size, grade, website_content):
         """Variant A: No pricing mentioned (control group)"""
-        return f"""You are Jonas from {config.COMPANY_NAME} - a premium agency specializing in website optimization for local businesses.
+        return f"""You are Jonas from {self.account_config.company_name} - a premium agency specializing in website optimization for local businesses.
 
 MISSION: Write a highly personalized, conversion-focused cold email that gets replies.
 
@@ -109,8 +113,8 @@ CLOSING (Soft CTA + Value):
 
 SIGNATURE (Professional + Approachable):
 Jonas
-{config.COMPANY_NAME}
-{config.CONTACT_EMAIL}
+{self.account_config.company_name}
+{self.account_config.contact_email}
 
 ===== CRITICAL RULES =====
 ✓ GREETING MUST BE: "Hi {company_name} Team," (CAPITAL T in "Team" - this is mandatory)
@@ -141,7 +145,7 @@ Write ONLY the email body. Make it feel like you spent 10 minutes researching th
 
     def get_email_prompt_variant_b(self, company_name, website_url, load_time, page_size, grade, website_content):
         """Variant B: Includes pricing ($299) - tests if transparency increases conversion"""
-        return f"""You are Jonas from {config.COMPANY_NAME} - a premium agency specializing in website optimization for local businesses.
+        return f"""You are Jonas from {self.account_config.company_name} - a premium agency specializing in website optimization for local businesses.
 
 MISSION: Write a highly personalized, conversion-focused cold email that gets replies.
 
@@ -172,8 +176,8 @@ CLOSING (Soft CTA + Value with Price):
 
 SIGNATURE (Professional + Approachable):
 Jonas
-{config.COMPANY_NAME}
-{config.CONTACT_EMAIL}
+{self.account_config.company_name}
+{self.account_config.contact_email}
 
 ===== CRITICAL RULES =====
 ✓ GREETING MUST BE: "Hi {company_name} Team," (CAPITAL T in "Team" - this is mandatory)
@@ -417,16 +421,16 @@ Write ONLY the email body. Make it feel like you spent 10 minutes researching th
 
 def main():
     """
-    Main function to run the emailer standalone
+    Main function to run the emailer standalone - Multi-Account Mode
     """
     import os
     import fcntl
     
     # Create data directory if it doesn't exist
-    os.makedirs(config.DATA_DIR, exist_ok=True)
+    os.makedirs("data", exist_ok=True)
     
     # LOCK FILE: Prevent multiple emailer instances from running simultaneously
-    lock_file_path = os.path.join(config.DATA_DIR, 'emailer.lock')
+    lock_file_path = os.path.join("data", 'emailer.lock')
     lock_file = open(lock_file_path, 'w')
     try:
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -436,57 +440,53 @@ def main():
         return
     
     print("="*80)
-    print("COLD EMAIL SENDER - Standalone Mode")
+    print("COLD EMAIL SENDER - Multi-Account Mode")
     print("="*80)
     
-    # Check if scraped data exists
-    if not os.path.exists(config.SCRAPED_COMPANIES_FILE):
-        print(f"\nError: Scraped companies file not found at {config.SCRAPED_COMPANIES_FILE}")
-        print("Please run the scraper first (python scraper.py)")
+    # Initialize email sender (loads account config)
+    sender = EmailSender()
+    account_config = sender.account_config
+    
+    if not account_config.account_id:
+        print("❌ No active account found. Please create an account in the dashboard first.")
         return
     
-    # Load scraped companies
-    with open(config.SCRAPED_COMPANIES_FILE, 'r') as f:
-        companies = json.load(f)
+    print(f"✓ Active Account: {account_config.account_name}")
+    print(f"  Company: {account_config.company_name}")
+    print()
     
-    print(f"\nLoaded {len(companies)} companies from scraped data")
+    # Get unsent companies from database
+    companies = account_config.get_unsent_companies()
     
-    # Use defaults (automated execution)
-    max_emails = config.MAX_EMAILS_PER_RUN
-    delay = config.DELAY_BETWEEN_EMAILS
+    print(f"\nLoaded {len(companies)} unsent companies from database")
+    
+    # Use account-specific settings
+    max_emails = account_config.MAX_EMAILS_PER_RUN
+    delay = account_config.DELAY_BETWEEN_EMAILS
     
     print(f"\nConfiguration:")
     print(f"  - Max emails: {max_emails}")
     print(f"  - Delay: {delay} seconds")
-    print(f"  - Rotating senders: {config.USE_ROTATING_SENDERS}")
-    if config.USE_ROTATING_SENDERS:
-        print(f"  - Sender prefixes: {len(config.ROTATING_SENDER_PREFIXES)} addresses")
+    print(f"  - Rotating senders: {account_config.USE_ROTATING_SENDERS}")
+    if account_config.USE_ROTATING_SENDERS and account_config.ROTATING_SENDER_PREFIXES:
+        print(f"  - Sender prefixes: {len(account_config.ROTATING_SENDER_PREFIXES)} addresses")
     
-    # Initialize email sender
-    sender = EmailSender()
-    
-    # Load sent emails list
-    sent_emails = sender.load_sent_emails()
-    print(f"\nAlready sent to {len(sent_emails)} addresses")
-    
-    # Filter out law companies and already contacted
-    def is_law_company(company):
-        name = company.get('name', '').lower()
-        content = company.get('website_content', '').lower()[:1000]
-        law_keywords = ['law firm', 'attorney', 'lawyer', 'legal services', 'counsel', 'esquire']
-        return any(kw in name or kw in content for kw in law_keywords)
-    
+    # Filter out already sent emails
     available_companies = [
         c for c in companies 
-        if c.get("email") 
-        and c.get("email") not in sent_emails
-        and not is_law_company(c)
+        if c.get("email") and not account_config.is_email_already_sent(c.get("email"))
     ]
     
     print(f"Available companies to email: {len(available_companies)}")
     
     if not available_companies:
         print("\nNo new companies to email. All available companies have been contacted.")
+        return
+    
+    # Check minimum threshold
+    if len(available_companies) < 20:
+        print(f"\n⚠️  Only {len(available_companies)} companies available.")
+        print("   Waiting for scraper to find more leads (minimum 20 recommended).")
         return
     
     # Auto-start sending
@@ -501,20 +501,27 @@ def main():
     
     sent_count = 0
     failed_count = 0
-    sent_company_emails = []  # Track which companies to remove
     
     for i, company in enumerate(available_companies[:max_emails], 1):
-        print(f"\n[{i}/{min(max_emails, len(available_companies))}] Processing: {company.get('name')}")
+        company_name = company.get('company_name', 'Unknown')
+        print(f"\n[{i}/{min(max_emails, len(available_companies))}] Processing: {company_name}")
         
-        # CRITICAL: Reload sent emails before each send to prevent duplicates
-        # This prevents race conditions when parallel_runner restarts the emailer
-        current_sent_emails = sender.load_sent_emails()
-        if company.get("email") in current_sent_emails:
+        # Check again if already sent (race condition protection)
+        if account_config.is_email_already_sent(company.get("email")):
             print(f"⚠️  Already sent to {company.get('email')} - Skipping to prevent duplicate")
             continue
         
         # Generate personalized email
-        email_data = sender.generate_personalized_email(company)
+        # Convert database format to expected format
+        company_for_email = {
+            'name': company_name,
+            'website': company.get('website'),
+            'email': company.get('email'),
+            'speed_score': company.get('speed_score'),
+            'website_content': company.get('content', '')
+        }
+        
+        email_data = sender.generate_personalized_email(company_for_email)
         
         if not email_data.get("success"):
             print(f"Skipping due to email generation error")
@@ -529,10 +536,18 @@ def main():
         )
         
         if success:
-            # Save to sent list with A/B variant
-            variant = email_data.get("variant", "A")
-            sender.save_sent_email(company.get("email"), company, variant)
-            sent_company_emails.append(company.get("email"))
+            # Save to database
+            account_config.save_sent_email({
+                'company_id': company.get('id'),
+                'email': company.get('email'),
+                'subject': email_data.get('subject'),
+                'body': email_data.get('body'),
+                'variant': email_data.get('variant', 'A')
+            })
+            
+            # Mark company as sent
+            account_config.mark_company_as_sent(company.get('id'))
+            
             sent_count += 1
         else:
             failed_count += 1
@@ -541,14 +556,6 @@ def main():
         if i < min(max_emails, len(available_companies)):
             print(f"Waiting {delay} seconds before next email...")
             time.sleep(delay)
-    
-    # Remove sent companies from scraped list
-    if sent_company_emails:
-        print(f"\n🗑️  Removing {len(sent_company_emails)} sent companies from scraped list...")
-        companies = [c for c in companies if c.get('email') not in sent_company_emails]
-        with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
-            json.dump(companies, f, indent=2)
-        print(f"✓ Scraped list updated: {len(companies)} companies remaining")
     
     # Print summary
     print("\n" + "="*80)

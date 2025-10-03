@@ -16,14 +16,15 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from scrapfly import ScrapflyClient, ScrapeConfig
 from bs4 import BeautifulSoup
-import config
+from account_config import get_account_config
 
 
 class CompanyScraper:
     def __init__(self):
-        self.serper_api_key = config.SERPER_API_KEY
-        self.scrapfly_client = ScrapflyClient(key=config.SCRAPFLY_API_KEY)
-        self.rapidapi_key = config.RAPIDAPI_KEY
+        self.account_config = get_account_config()
+        self.serper_api_key = self.account_config.SERPER_API_KEY
+        self.scrapfly_client = ScrapflyClient(key=self.account_config.SCRAPFLY_API_KEY)
+        self.rapidapi_key = self.account_config.RAPIDAPI_KEY
         
     def search_companies(self, query: str, num_results: int = 100) -> List[Dict]:
         """
@@ -569,10 +570,10 @@ def main():
     import fcntl
     
     # Create data directory if it doesn't exist
-    os.makedirs(config.DATA_DIR, exist_ok=True)
+    os.makedirs("data", exist_ok=True)
     
     # LOCK FILE: Prevent multiple scraper instances from running simultaneously
-    lock_file_path = os.path.join(config.DATA_DIR, 'scraper.lock')
+    lock_file_path = os.path.join("data", 'scraper.lock')
     lock_file = open(lock_file_path, 'w')
     try:
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -582,37 +583,55 @@ def main():
         return
     
     print("="*80)
-    print("COLD EMAIL SCRAPER - Multi-Query Mode")
+    print("COLD EMAIL SCRAPER - Multi-Account Mode")
     print("="*80)
     
-    # Load search queries from file
-    search_queries = load_search_queries("search_queries.txt")
+    # Initialize scraper (loads account config)
+    scraper = CompanyScraper()
+    account_config = scraper.account_config
+    
+    if not account_config.account_id:
+        print("❌ No active account found. Please create an account in the dashboard first.")
+        return
+    
+    print(f"✓ Active Account: {account_config.account_name}")
+    print(f"  Company: {account_config.company_name}")
+    print()
+    
+    # Load search queries from database for this account
+    search_queries = account_config.get_search_queries()
     
     print(f"\nLoaded {len(search_queries)} search queries:")
     for i, query in enumerate(search_queries, 1):
         print(f"  {i}. {query}")
+    
+    if not search_queries:
+        print("⚠️  No unused search queries found for this account.")
+        print("   Add queries via the dashboard or run the migration script.")
+        return
     
     results_per_query = 50
     print(f"\nWill scrape {results_per_query} results per query")
     print(f"Total expected results: ~{len(search_queries) * results_per_query}")
     print("\nStarting scraper...\n")
     
-    # Initialize scraper
-    scraper = CompanyScraper()
-    
-    # Get already scraped URLs to avoid duplicates
-    already_scraped = get_already_scraped_urls()
-    print(f"Already scraped {len(already_scraped)} unique URLs (will skip)\n")
-    
-    # Load existing data if available
-    all_scraped_data = []
-    if os.path.exists(config.SCRAPED_COMPANIES_FILE):
-        try:
-            with open(config.SCRAPED_COMPANIES_FILE, 'r') as f:
-                all_scraped_data = json.load(f)
-            print(f"Loaded {len(all_scraped_data)} existing companies from previous runs")
-        except:
-            pass
+    # Get already scraped URLs from database to avoid duplicates
+    already_scraped = set()
+    try:
+        import database
+        with database.get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT website FROM scraped_companies WHERE account_id = ?",
+                (account_config.account_id,)
+            )
+            for row in cursor.fetchall():
+                if row[0]:
+                    already_scraped.add(normalize_url(row[0]))
+        print(f"Already scraped {len(already_scraped)} unique URLs for this account (will skip)\n")
+    except Exception as e:
+        print(f"Warning: Could not load already scraped URLs: {e}")
+        already_scraped = set()
     
     # Process each query
     total_new_companies = 0
@@ -669,16 +688,21 @@ def main():
                         is_law = any(kw in name_lower or kw in content_lower for kw in law_keywords)
                         
                         if not is_law:
-                            company_data['source_query'] = query
-                            all_scraped_data.append(company_data)
-                            already_scraped.add(normalize_url(company_data.get('url', '')))
-                            total_new_companies += 1
+                            # Save to database
+                            company_id = account_config.save_scraped_company({
+                                'company_name': company_data.get('name'),
+                                'website': company_data.get('url'),
+                                'email': company_data.get('email'),
+                                'speed_score': company_data.get('speed_score'),
+                                'content': company_data.get('website_content')
+                            })
                             
-                            # Save progress every 10 companies
-                            if total_new_companies % 10 == 0:
-                                with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
-                                    json.dump(all_scraped_data, f, indent=2)
-                                print(f"  💾 Saved {total_new_companies} companies")
+                            if company_id:
+                                already_scraped.add(normalize_url(company_data.get('url', '')))
+                                total_new_companies += 1
+                                
+                                if total_new_companies % 10 == 0:
+                                    print(f"  💾 Saved {total_new_companies} companies to database")
                         else:
                             print(f"✗ Skipped (law)")
                             already_scraped.add(normalize_url(future_to_company[future].get('url', '')))
@@ -721,15 +745,11 @@ def main():
         
         print(f"\n✓ Completed query {query_num}/{len(search_queries)}")
         
-        # Mark query as used
-        mark_query_as_used(query)
+        # Mark query as used in database
+        account_config.mark_query_as_used(query)
         
         # No delay between queries
         pass
-    
-    # Save final results
-    with open(config.SCRAPED_COMPANIES_FILE, 'w') as f:
-        json.dump(all_scraped_data, f, indent=2)
     
     # Print summary
     print("\n" + "="*80)
@@ -737,9 +757,22 @@ def main():
     print("="*80)
     print(f"Total queries processed: {len(search_queries)}")
     print(f"NEW companies added THIS RUN: {total_new_companies}")
-    print(f"TOTAL companies in database: {len(all_scraped_data)}")
-    print(f"All have verified emails: {sum(1 for c in all_scraped_data if c.get('email'))}")
-    print(f"\nData saved to: {config.SCRAPED_COMPANIES_FILE}")
+    
+    # Get total count from database
+    try:
+        import database
+        with database.get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) FROM scraped_companies WHERE account_id = ?",
+                (account_config.account_id,)
+            )
+            total_in_db = cursor.fetchone()[0]
+            print(f"TOTAL companies in database (this account): {total_in_db}")
+    except:
+        pass
+    
+    print(f"\nData saved to database for account: {account_config.account_name}")
     print("="*80)
     
     # Release lock
