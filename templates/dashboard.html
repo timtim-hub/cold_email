@@ -68,7 +68,7 @@
 <body class="bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 min-h-screen text-white">
     
     <!-- Header -->
-    <header class="glass border-b border-gray-700">
+    <header class="glass border-b border-gray-700 relative" style="z-index: 1000;">
         <div class="container mx-auto px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
@@ -80,7 +80,7 @@
                 </div>
                 <div class="flex items-center space-x-3">
                     <!-- Account Switcher -->
-                    <div class="relative">
+                    <div class="relative" style="z-index: 9999;">
                         <button 
                             onclick="toggleAccountDropdown()" 
                             id="account-switcher-btn"
@@ -94,7 +94,8 @@
                         <!-- Dropdown Menu -->
                         <div 
                             id="account-dropdown"
-                            class="hidden absolute right-0 mt-2 w-72 glass rounded-xl shadow-2xl border border-gray-700 z-50 max-h-96 overflow-y-auto"
+                            class="hidden absolute right-0 mt-2 w-72 glass rounded-xl shadow-2xl border border-gray-700 max-h-96 overflow-y-auto"
+                            style="z-index: 9999;"
                         >
                             <div class="p-2">
                                 <!-- Accounts List -->
